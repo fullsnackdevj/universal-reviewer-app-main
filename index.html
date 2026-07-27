@@ -262,9 +262,12 @@
 
             <!-- Identification Container -->
             <div id="identification-container" class="mb-6 hidden w-full">
-                <label for="ident-input" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Type your answer below:</label>
+                <div class="flex items-center justify-between mb-2">
+                    <label for="ident-input" class="block text-xs font-semibold text-slate-500 dark:text-slate-400">Type your answer below:</label>
+                    <span id="ident-hint" class="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded-md border border-purple-200 dark:border-purple-800"></span>
+                </div>
                 <input type="text" id="ident-input" class="w-full p-3.5 sm:p-4 text-base sm:text-lg rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition dark:text-white" placeholder="Type answer here..." autocomplete="off">
-                <button id="btn-submit-ident" class="w-full mt-3 py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition touch-target">
+                <button id="btn-submit-ident" class="w-full mt-3 py-3.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 active:scale-95 transition touch-target">
                     Submit Answer
                 </button>
             </div>
@@ -589,6 +592,7 @@
             choicesContainer: document.getElementById('choices-container'),
             identificationContainer: document.getElementById('identification-container'),
             identInput: document.getElementById('ident-input'),
+            identHint: document.getElementById('ident-hint'),
             btnSubmitIdent: document.getElementById('btn-submit-ident'),
             tfContainer: document.getElementById('tf-container'),
             btnTfTrue: document.getElementById('btn-tf-true'),
@@ -834,13 +838,13 @@
             const activeSet = getActiveSet();
             const targetItem = activeSet.items[getRandomInt(activeSet.items.length)];
 
-            // Randomly select between the 3 allowed question formats: MCQ, Identification, True/False
+            // Randomly select between the 3 question formats: MCQ, Identification, True/False
             const allowedModes = ['mcq', 'ident', 'tf'];
             const qMode = allowedModes[getRandomInt(allowedModes.length)];
 
             appState.currentQuestion = { targetItem, mode: qMode };
 
-            // Hide containers
+            // Hide all quiz containers
             els.choicesContainer.classList.add('hidden');
             els.identificationContainer.classList.add('hidden');
             els.tfContainer.classList.add('hidden');
@@ -848,18 +852,33 @@
             if (qMode === 'mcq') {
                 els.questionTypeBadge.textContent = 'Multiple Choice';
                 els.questionTypeBadge.className = 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
-                els.questionText.textContent = `What is the term for: "${targetItem.def}"`;
-                setupMCQ(targetItem, activeSet.items);
+                
+                // Varied MCQ Formats (50% ask definition given term, 50% ask term given definition or fill-in-blank)
+                const isAskingDef = Math.random() > 0.5;
+                appState.currentQuestion.isAskingDef = isAskingDef;
+
+                if (isAskingDef) {
+                    els.questionText.innerHTML = `<span class="text-xs font-semibold text-blue-500 uppercase tracking-wider block mb-1">Concept Definition</span>What is the primary function or definition of <strong class="text-blue-600 dark:text-blue-400 font-bold">"${targetItem.term}"</strong>?`;
+                    setupMCQDefinition(targetItem, activeSet.items);
+                } else {
+                    const isFillBlank = Math.random() > 0.5 && targetItem.def.toLowerCase().includes(targetItem.term.toLowerCase());
+                    if (isFillBlank) {
+                        const maskedDef = targetItem.def.replace(new RegExp(targetItem.term, 'gi'), '________');
+                        els.questionText.innerHTML = `<span class="text-xs font-semibold text-indigo-500 uppercase tracking-wider block mb-1">Fill in the Blank</span><strong>_______</strong> ${maskedDef}`;
+                    } else {
+                        els.questionText.innerHTML = `<span class="text-xs font-semibold text-purple-500 uppercase tracking-wider block mb-1">Term Identification</span>Which concept is defined as: <em class="text-slate-800 dark:text-slate-100 font-normal">"${targetItem.def}"</em>?`;
+                    }
+                    setupMCQTerm(targetItem, activeSet.items);
+                }
             } else if (qMode === 'ident') {
                 els.questionTypeBadge.textContent = 'Identification';
                 els.questionTypeBadge.className = 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
-                els.questionText.textContent = `Identify the term: "${targetItem.def}"`;
-                setupIdentification();
+                els.questionText.innerHTML = `<span class="text-xs font-semibold text-purple-500 uppercase tracking-wider block mb-1">Concept Recall</span>Identify the concept described below:<br><span class="text-sm sm:text-base font-normal text-slate-700 dark:text-slate-200 mt-1 block">"${targetItem.def}"</span>`;
+                setupIdentification(targetItem);
             } else if (qMode === 'tf') {
                 els.questionTypeBadge.textContent = 'True or False';
                 els.questionTypeBadge.className = 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
                 
-                // 50% chance of being True statement, 50% chance of False (swapped definition)
                 const isTrue = Math.random() > 0.5;
                 let displayedDef = targetItem.def;
                 let swappedItem = null;
@@ -871,20 +890,54 @@
                 }
                 appState.currentQuestion.isTrueStatement = isTrue;
                 appState.currentQuestion.swappedItem = swappedItem;
-                els.questionText.innerHTML = `<span class="text-xs sm:text-sm block font-normal text-slate-400 mb-1">True or False statement:</span> "${targetItem.term}" means "${displayedDef}"`;
+                els.questionText.innerHTML = `<span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">True or False Statement</span><strong class="text-slate-900 dark:text-slate-100">"${targetItem.term}"</strong> refers to: <em>"${displayedDef}"</em>`;
                 setupTrueFalse();
             }
         };
 
-        // --- MCQ SETUP & LOGIC ---
-        const setupMCQ = (targetItem, allItems) => {
+        // --- MCQ SETUP (OPTIONS = DEFINITIONS) ---
+        const setupMCQDefinition = (targetItem, allItems) => {
             els.choicesContainer.classList.remove('hidden');
             els.choicesContainer.innerHTML = '';
 
-            let choices = [targetItem.term];
-            while (choices.length < Math.min(4, allItems.length)) {
-                const randTerm = allItems[getRandomInt(allItems.length)].term;
-                if (!choices.includes(randTerm)) choices.push(randTerm);
+            let choices = [targetItem];
+            let otherItems = allItems.filter(i => i.term !== targetItem.term);
+
+            while (choices.length < Math.min(4, allItems.length) && otherItems.length > 0) {
+                const randIdx = getRandomInt(otherItems.length);
+                choices.push(otherItems[randIdx]);
+                otherItems.splice(randIdx, 1);
+            }
+            choices = shuffleArray(choices);
+            const letters = ['A', 'B', 'C', 'D'];
+
+            choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'mcq-choice-btn w-full p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium text-left transition flex items-center justify-between touch-target hover:border-blue-400 break-words';
+                btn.innerHTML = `
+                    <div class="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                        <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-extrabold flex items-center justify-center text-xs sm:text-sm flex-shrink-0 mt-0.5">${letters[index]}</span>
+                        <span class="text-xs sm:text-sm font-medium choice-text break-words min-w-0 leading-relaxed">${choice.def}</span>
+                    </div>
+                    <i class="status-icon fas hidden text-base sm:text-lg flex-shrink-0 ml-2 mt-1"></i>
+                `;
+                btn.onclick = () => handleMCQAnswer(btn, choice.term, targetItem.term);
+                els.choicesContainer.appendChild(btn);
+            });
+        };
+
+        // --- MCQ SETUP (OPTIONS = TERMS) ---
+        const setupMCQTerm = (targetItem, allItems) => {
+            els.choicesContainer.classList.remove('hidden');
+            els.choicesContainer.innerHTML = '';
+
+            let choices = [targetItem];
+            let otherItems = allItems.filter(i => i.term !== targetItem.term);
+
+            while (choices.length < Math.min(4, allItems.length) && otherItems.length > 0) {
+                const randIdx = getRandomInt(otherItems.length);
+                choices.push(otherItems[randIdx]);
+                otherItems.splice(randIdx, 1);
             }
             choices = shuffleArray(choices);
             const letters = ['A', 'B', 'C', 'D'];
@@ -894,12 +947,12 @@
                 btn.className = 'mcq-choice-btn w-full p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium text-left transition flex items-center justify-between touch-target hover:border-blue-400 break-words';
                 btn.innerHTML = `
                     <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                        <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-extrabold flex items-center justify-center text-xs sm:text-sm flex-shrink-0">${letters[index]}</span>
-                        <span class="text-xs sm:text-base font-semibold choice-text break-words min-w-0">${choice}</span>
+                        <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 font-extrabold flex items-center justify-center text-xs sm:text-sm flex-shrink-0">${letters[index]}</span>
+                        <span class="text-xs sm:text-base font-semibold choice-text break-words min-w-0">${choice.term}</span>
                     </div>
                     <i class="status-icon fas hidden text-base sm:text-lg flex-shrink-0 ml-2"></i>
                 `;
-                btn.onclick = () => handleMCQAnswer(btn, choice, targetItem.term);
+                btn.onclick = () => handleMCQAnswer(btn, choice.term, targetItem.term);
                 els.choicesContainer.appendChild(btn);
             });
         };
@@ -913,52 +966,96 @@
 
             buttons.forEach(btn => {
                 btn.disabled = true;
-                const text = btn.querySelector('.choice-text').textContent;
                 const icon = btn.querySelector('.status-icon');
                 icon.classList.remove('hidden');
 
-                if (text === correctTerm) {
-                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'text-emerald-800', 'dark:text-emerald-300');
-                    icon.classList.add('fa-check-circle', 'text-emerald-500');
-                } else if (text === selectedTerm && !isCorrect) {
-                    btn.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-950/40', 'text-red-800', 'dark:text-red-300');
-                    icon.classList.add('fa-times-circle', 'text-red-500');
+                if (btn === selectedBtn) {
+                    if (isCorrect) {
+                        btn.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'text-emerald-800', 'dark:text-emerald-300');
+                        icon.classList.add('fa-check-circle', 'text-emerald-500');
+                    } else {
+                        btn.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-950/40', 'text-red-800', 'dark:text-red-300');
+                        icon.classList.add('fa-times-circle', 'text-red-500');
+                    }
                 } else {
-                    btn.classList.add('opacity-40');
+                    if (!isCorrect && (btn.textContent.includes(correctTerm) || btn.textContent.includes(appState.currentQuestion.targetItem.def))) {
+                        btn.classList.add('border-emerald-500', 'bg-emerald-50/50', 'dark:bg-emerald-950/30');
+                    } else {
+                        btn.classList.add('opacity-40');
+                    }
                 }
             });
 
-            showQuizFeedback(isCorrect, isCorrect ? "Correct answer!" : `Incorrect! The correct answer is "${correctTerm}".`);
+            const target = appState.currentQuestion.targetItem;
+            showQuizFeedback(isCorrect, isCorrect 
+                ? `🎉 <strong class="font-bold">Correct answer!</strong> <em>"${target.term}"</em> means <em>"${target.def}"</em>.` 
+                : `❌ <strong class="font-bold">Incorrect!</strong> The correct answer is <strong>"${target.term}"</strong> (<em>"${target.def}"</em>).`);
             processResult(isCorrect, selectedTerm, correctTerm);
         };
 
-        // --- IDENTIFICATION SETUP & LOGIC ---
-        const setupIdentification = () => {
+        // --- IDENTIFICATION MATCHING & LOGIC ---
+        const normalizeAnswer = (str) => {
+            if (!str) return '';
+            return str
+                .toLowerCase()
+                .replace(/\b(a|an|the)\b/gi, '')
+                .replace(/[^a-z0-9]/gi, '')
+                .trim();
+        };
+
+        const checkIdentificationMatch = (userAns, targetItem) => {
+            const normUser = normalizeAnswer(userAns);
+            if (!normUser) return false;
+
+            const normTarget = normalizeAnswer(targetItem.term);
+            if (normUser === normTarget) return true;
+
+            // Check aliases
+            if (targetItem.alias && Array.isArray(targetItem.alias)) {
+                for (const alias of targetItem.alias) {
+                    if (normalizeAnswer(alias) === normUser) return true;
+                }
+            }
+
+            // Plural / Singular tolerance
+            if (normTarget.length >= 4) {
+                if (normUser === normTarget + 's' || normUser + 's' === normTarget) return true;
+            }
+
+            return false;
+        };
+
+        const setupIdentification = (targetItem) => {
             els.identificationContainer.classList.remove('hidden');
             els.identInput.value = '';
             els.identInput.disabled = false;
             els.btnSubmitIdent.disabled = false;
+
+            if (els.identHint) {
+                const termStr = targetItem.term;
+                const firstChar = termStr.charAt(0).toUpperCase();
+                els.identHint.textContent = `💡 Hint: Starts with "${firstChar}" (${termStr.length} letters)`;
+            }
+
             setTimeout(() => els.identInput.focus(), 100);
         };
 
         const handleIdentAnswer = () => {
             if (appState.isAnswered) return;
-            const userAns = els.identInput.value.trim().toLowerCase();
-            if (!userAns) return;
+            const rawUserAns = els.identInput.value.trim();
+            if (!rawUserAns) return;
 
             appState.isAnswered = true;
             els.identInput.disabled = true;
             els.btnSubmitIdent.disabled = true;
 
             const targetItem = appState.currentQuestion.targetItem;
-            let isCorrect = userAns === targetItem.term.toLowerCase();
+            const isCorrect = checkIdentificationMatch(rawUserAns, targetItem);
 
-            if (!isCorrect && targetItem.alias) {
-                isCorrect = targetItem.alias.some(a => a.toLowerCase() === userAns);
-            }
-
-            showQuizFeedback(isCorrect, isCorrect ? "Spot on! Correct identification." : `Incorrect! Correct answer is "${targetItem.term}".`);
-            processResult(isCorrect, els.identInput.value, targetItem.term);
+            showQuizFeedback(isCorrect, isCorrect 
+                ? `🎉 <strong class="font-bold">Spot on!</strong> Correct identification: <strong>"${targetItem.term}"</strong>.` 
+                : `❌ <strong class="font-bold">Incorrect.</strong> Correct term is <strong>"${targetItem.term}"</strong>.`);
+            processResult(isCorrect, rawUserAns, targetItem.term);
         };
 
         els.btnSubmitIdent.onclick = handleIdentAnswer;
@@ -986,18 +1083,17 @@
             let feedbackMsg = '';
             if (isTrueStatement) {
                 if (isCorrect) {
-                    feedbackMsg = `<span class="font-bold text-emerald-600 dark:text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Correct!</span> The statement is TRUE. <em>"${targetItem.term}"</em> means <em>"${targetItem.def}"</em>.`;
+                    feedbackMsg = `<span class="font-bold text-emerald-600 dark:text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Correct!</span> Statement is TRUE. <em>"${targetItem.term}"</em> means <em>"${targetItem.def}"</em>.`;
                 } else {
-                    feedbackMsg = `<span class="font-bold text-red-600 dark:text-red-400"><i class="fas fa-times-circle mr-1"></i>Incorrect!</span> The statement was TRUE. <em>"${targetItem.term}"</em> really does mean <em>"${targetItem.def}"</em>.`;
+                    feedbackMsg = `<span class="font-bold text-red-600 dark:text-red-400"><i class="fas fa-times-circle mr-1"></i>Incorrect!</span> Statement was TRUE. <em>"${targetItem.term}"</em> really does mean <em>"${targetItem.def}"</em>.`;
                 }
             } else {
-                // Statement is FALSE -> Give clear explanation why!
-                const reasonText = `<strong>Why it's FALSE:</strong> <em>"${targetItem.term}"</em> actually means <strong>"${targetItem.def}"</strong>. ${swappedItem ? `(The definition shown belongs to <strong>"${swappedItem.term}"</strong>).` : ''}`;
+                const reasonText = `<strong>Explanation:</strong> <em>"${targetItem.term}"</em> actually means <strong>"${targetItem.def}"</strong>. ${swappedItem ? `(The description shown belongs to <strong>"${swappedItem.term}"</strong>).` : ''}`;
                 
                 if (isCorrect) {
-                    feedbackMsg = `<span class="font-bold text-emerald-600 dark:text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Correct!</span> You correctly identified that this statement is FALSE.<br><span class="text-xs sm:text-sm mt-1 block font-normal text-slate-700 dark:text-slate-200">${reasonText}</span>`;
+                    feedbackMsg = `<span class="font-bold text-emerald-600 dark:text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Spot on!</span> Statement is FALSE.<br><span class="text-xs sm:text-sm mt-1 block font-normal text-slate-700 dark:text-slate-200">${reasonText}</span>`;
                 } else {
-                    feedbackMsg = `<span class="font-bold text-red-600 dark:text-red-400"><i class="fas fa-times-circle mr-1"></i>Incorrect!</span> The statement is FALSE.<br><span class="text-xs sm:text-sm mt-1 block font-normal text-slate-700 dark:text-slate-200">${reasonText}</span>`;
+                    feedbackMsg = `<span class="font-bold text-red-600 dark:text-red-400"><i class="fas fa-times-circle mr-1"></i>Incorrect!</span> Statement is FALSE.<br><span class="text-xs sm:text-sm mt-1 block font-normal text-slate-700 dark:text-slate-200">${reasonText}</span>`;
                 }
             }
 
@@ -1218,24 +1314,70 @@
             showToast({ type: 'success', title: 'Parsing Complete! 🎉', message: `Parsed <strong>${files.length}</strong> file(s) and extracted <strong>${newSet.items.length}</strong> clean question concepts into "<strong>${newSet.name}</strong>"!`, duration: 6000 });
         };
 
-        // --- INTELLECTUAL TERM CLEANER ---
+        // Noise filter words for extracted terms
+        const junkTermPatterns = [
+            /^(table of contents|index|page \d+|chapter \d+|unit \d+|lesson \d+|section \d+|module \d+|test|quiz|examination|directions|instructions|part \d+|note|notes|summary|copyright|all rights reserved|author|date|score|name|number|fig|figure \d+)$/i,
+            /^(multiple choice|true or false|identification|matching|fill in the blanks|fill-in-the-blank)$/i,
+            /^\d+[\.\)]?$/,
+            /^[^a-zA-Z0-9]+$/
+        ];
+
+        const isJunkTerm = (term) => {
+            if (!term || term.length < 2 || term.length > 70) return true;
+            return junkTermPatterns.some(pattern => pattern.test(term.trim()));
+        };
+
         const cleanTerm = (rawTerm) => {
             if (!rawTerm) return '';
             return rawTerm
-                // Remove weird UTF-8 / PDF bullet artifacts (e.g. â€¢, Ã¢â‚¬Â¢, \u2022, etc.)
                 .replace(/^[^a-zA-Z0-9]+/, '')
-                // Remove leading 1-2 letter lowercase bullet artifacts (e.g. "eo Key Interfaces", "v Core Components", "o Form Factors")
                 .replace(/^[a-z]{1,2}\s+(?=[A-Z0-9])/, '')
-                // Remove leading numbers or bullets like "1. ", "• "
-                .replace(/^(?:\d+[\.\)]\s*|•|\*|\-|\#+)\s*/, '')
+                .replace(/^(?:(?:\d+|[IVXLCDM]+|[a-z])[\.\)]\s*|•|\*|\-|\#+)\s*/i, '')
                 .trim();
+        };
+
+        const parseTermAndAliases = (cleanedTerm) => {
+            let primaryTerm = cleanedTerm;
+            let aliases = [];
+
+            const parenMatch = cleanedTerm.match(/^([^\(\)]+)\s*\(([^()]+)\)$/);
+            if (parenMatch) {
+                const mainPart = parenMatch[1].trim();
+                const insideParen = parenMatch[2].trim();
+
+                if (insideParen.length <= 8 && /^[A-Z0-9\+\-\/\s]+$/i.test(insideParen)) {
+                    primaryTerm = mainPart;
+                    aliases.push(insideParen, cleanedTerm);
+                } else if (mainPart.length <= 8 && /^[A-Z0-9\+\-\/\s]+$/i.test(mainPart)) {
+                    primaryTerm = insideParen;
+                    aliases.push(mainPart, cleanedTerm);
+                } else {
+                    primaryTerm = mainPart;
+                    aliases.push(insideParen);
+                }
+            }
+
+            return { primaryTerm, aliases };
+        };
+
+        const formatDefinition = (def) => {
+            if (!def) return '';
+            let clean = def.trim()
+                .replace(/^[:–\-=\s]+/, '')
+                .replace(/^(is|are|refers to|defined as|described as)\s+/i, '');
+            if (clean.length > 0) {
+                clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+            }
+            if (clean && !/[.\?!]$/.test(clean)) {
+                clean += '.';
+            }
+            return clean;
         };
 
         const extractItemsFromText = (text) => {
             const items = [];
             if (!text || typeof text !== 'string') return items;
 
-            // Normalize line endings, non-breaking spaces, and bullet symbols
             const cleanText = text
                 .replace(/[\u25CF\u2022\u25CB\u25A0\u25AA]/g, '•')
                 .replace(/\u00A0/g, ' ')
@@ -1248,71 +1390,82 @@
             for (let i = 0; i < rawLines.length; i++) {
                 const line = rawLines[i];
 
-                // Check for Section Heading (e.g. "1. Central Processing Unit (CPU)", "2. Motherboard")
-                const headingMatch = line.match(/^(?:\d+[\.\)]\s*|#{1,6}\s+)?([A-Z0-9][A-Za-z0-9\s\(\)\-\/\,]{2,70})$/);
+                const inlineMatch = line.match(/^(?:[•\*\-\d\.\)\s]*|[a-z]{1,2}\s+)?([^:–\-]{2,70})[:–\-=\t]\s*(.+)$/i);
+                const headingMatch = line.match(/^(?:\d+[\.\)]\s*|#{1,6}\s+)?([A-Z0-9][A-Za-z0-9\s\(\)\-\/\,]{2,60})$/);
+                const qaMatch = line.match(/^(?:Q|Question)\s*[:\.\-]\s*(.+?)\s*(?:A|Answer)\s*[:\.\-]\s*(.+)$/i);
 
-                // Check for Inline Key-Value / Bullet pair (e.g. "• Key Interfaces: CPU socket...", "RAM: Random Access Memory")
-                const inlineMatch = line.match(/^(?:[•\*\-\d\.\)\s]*|[a-z]{1,2}\s+)?([^:–\-]{2,80})[:–\-]\s*(.+)$/i);
+                if (qaMatch && qaMatch[1] && qaMatch[2]) {
+                    const qText = qaMatch[1].replace(/^(what|who|which|how|why|is|are|define|explain)\s+(is|are|the|a|an)?\s*/i, '').replace(/\?$/, '').trim();
+                    const termCandidate = cleanTerm(qText);
+                    const defCandidate = formatDefinition(qaMatch[2]);
+                    if (!isJunkTerm(termCandidate) && defCandidate.length >= 5) {
+                        const { primaryTerm, aliases } = parseTermAndAliases(termCandidate);
+                        items.push({ term: primaryTerm, def: defCandidate, alias: aliases.length ? aliases : undefined });
+                    }
+                } else if (inlineMatch && inlineMatch[1] && inlineMatch[2]) {
+                    const rawTerm = inlineMatch[1].trim();
+                    const rawDef = inlineMatch[2].trim();
+                    const cleanedTerm = cleanTerm(rawTerm);
 
-                if (inlineMatch && inlineMatch[1] && inlineMatch[2]) {
-                    let rawTerm = inlineMatch[1].trim();
-                    let def = inlineMatch[2].trim();
-                    let cleanedTerm = cleanTerm(rawTerm);
+                    if (!isJunkTerm(cleanedTerm) && rawDef.length >= 4) {
+                        const { primaryTerm, aliases } = parseTermAndAliases(cleanedTerm);
+                        const formattedDef = formatDefinition(rawDef);
 
-                    if (cleanedTerm.length >= 2 && def.length >= 4) {
-                        let displayTerm = cleanedTerm;
-                        let aliases = [];
-
-                        if (currentHeading && !cleanedTerm.toLowerCase().includes(currentHeading.toLowerCase())) {
-                            aliases.push(`${currentHeading} - ${cleanedTerm}`);
+                        if (currentHeading && !primaryTerm.toLowerCase().includes(currentHeading.toLowerCase())) {
+                            aliases.push(`${currentHeading} - ${primaryTerm}`);
                         }
 
                         items.push({
-                            term: displayTerm,
-                            def: def,
-                            alias: aliases.length > 0 ? aliases : undefined
+                            term: primaryTerm,
+                            def: formattedDef,
+                            alias: aliases.length > 0 ? Array.from(new Set(aliases)) : undefined
                         });
                     }
                 } else if (headingMatch && i + 1 < rawLines.length) {
                     const headingCandidate = cleanTerm(headingMatch[1]);
                     const nextLine = rawLines[i + 1];
-
                     const isNextHeadingOrBullet = nextLine.match(/^(?:\d+[\.\)]|[•\*\-]|[^:–\-]{2,50}[:–\-])/);
 
-                    if (headingCandidate && headingCandidate.length >= 2) {
+                    if (!isJunkTerm(headingCandidate)) {
                         currentHeading = headingCandidate;
 
-                        if (!isNextHeadingOrBullet && nextLine.length >= 8 && !headingCandidate.toLowerCase().includes('table of contents') && !headingCandidate.toLowerCase().includes('notes')) {
+                        if (!isNextHeadingOrBullet && nextLine.length >= 10 && !isJunkTerm(nextLine)) {
+                            const { primaryTerm, aliases } = parseTermAndAliases(headingCandidate);
+                            const formattedDef = formatDefinition(nextLine);
+
                             items.push({
-                                term: headingCandidate,
-                                def: nextLine
+                                term: primaryTerm,
+                                def: formattedDef,
+                                alias: aliases.length > 0 ? aliases : undefined
                             });
-                            i++; // consume next line as definition
+                            i++;
                         }
                     }
                 }
             }
 
-            // Fallback strategy: Sentence / Definition extractor if few items found
-            if (items.length < 3) {
+            if (items.length < 5) {
                 const sentences = text.split(/(?<=[.?!])\s+/);
                 sentences.forEach(s => {
-                    const match = s.match(/^([A-Z][A-Za-z0-9\s]{2,40})\s+(is|are|refers to|executes|provides|converts|acts as)\s+(.+)$/i);
+                    const match = s.match(/^([A-Z][A-Za-z0-9\s\(\)\-]{2,45})\s+(is|are|refers to|executes|provides|converts|acts as|serves as|is defined as)\s+(.+)$/i);
                     if (match) {
-                        const term = cleanTerm(match[1]);
-                        if (term) {
-                            items.push({ term: term, def: `${term} ${match[2]} ${match[3].trim()}` });
+                        const termCandidate = cleanTerm(match[1]);
+                        const verb = match[2];
+                        const rest = match[3].trim();
+                        if (!isJunkTerm(termCandidate) && rest.length >= 8) {
+                            const { primaryTerm, aliases } = parseTermAndAliases(termCandidate);
+                            const def = formatDefinition(`${verb} ${rest}`);
+                            items.push({ term: primaryTerm, def, alias: aliases.length ? aliases : undefined });
                         }
                     }
                 });
             }
 
-            // Deduplicate items by term
             const uniqueItems = [];
             const seen = new Set();
             items.forEach(item => {
                 const cleanT = cleanTerm(item.term);
-                if (cleanT && cleanT.length >= 2 && item.def && item.def.length >= 3) {
+                if (cleanT && !isJunkTerm(cleanT) && item.def && item.def.length >= 4) {
                     const key = cleanT.toLowerCase();
                     if (!seen.has(key)) {
                         seen.add(key);
