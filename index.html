@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-x-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Universal Document & Quiz Reviewer</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Parsing Libraries -->
+    <!-- Mammoth.js for Word (.docx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- SheetJS for Excel & CSV (.xlsx, .xls, .csv) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- JSZip for PowerPoint (.pptx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- PDF.js for PDF (.pdf) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    <!-- Tesseract.js for Image OCR (.png, .jpg, .jpeg, .webp, .bmp) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+    <!-- Tailwind Config & Custom Styling -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+                        accent: { 500: '#8b5cf6', 600: '#7c3aed' },
+                        success: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' },
+                        danger: { 50: '#fef2f2', 500: '#ef4444', 600: '#dc2626' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+        }
+
+        /* Glassmorphism & Card Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+        }
+
+        /* Animations */
+        @keyframes popIn {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Toast Animations */
+        @keyframes toastSlideIn {
+            0% { opacity: 0; transform: translateX(40px) scale(0.95); }
+            100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastSlideOut {
+            0% { opacity: 1; transform: translateX(0) scale(1); max-height: 120px; margin-bottom: 0.75rem; }
+            100% { opacity: 0; transform: translateX(60px) scale(0.9); max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border: none; }
+        }
+        .toast-enter {
+            animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .toast-exit {
+            animation: toastSlideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Custom Scrollbars */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Minimum touch target size */
+        .touch-target { min-height: 44px; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col min-h-screen selection:bg-blue-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
+
+    <!-- Header & Navigation Bar (Fully Mobile Responsive) -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 md:px-6 py-2.5 sm:py-3 transition-colors">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            
+            <!-- Top Row on Mobile: Logo & Stats/Theme -->
+            <div class="flex items-center justify-between w-full sm:w-auto">
+                <div class="flex items-center gap-2 cursor-pointer" id="brand-home">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 flex-shrink-0">
+                        <i class="fas fa-layer-group text-base sm:text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-sm sm:text-lg leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                            Universal Reviewer
+                        </h1>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden md:block">Docs • Images • PPT • Excel • PDF</p>
+                    </div>
+                </div>
+
+                <!-- Stats & Theme Toggle (Mobile Top Right) -->
+                <div class="flex items-center gap-1.5 sm:hidden">
+                    <button id="btn-stats-mobile" class="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1 touch-target">
+                        <div class="flex items-center gap-0.5 text-green-600 dark:text-green-400 font-bold">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="header-correct-mobile">0</span>
+                        </div>
+                        <span class="text-slate-300 dark:text-slate-700">|</span>
+                        <div class="flex items-center gap-0.5 text-red-500 dark:text-red-400 font-bold">
+                            <i class="fas fa-times-circle"></i>
+                            <span id="header-incorrect-mobile">0</span>
+                        </div>
+                    </button>
+                    <button id="btn-theme-toggle-mobile" class="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg touch-target">
+                        <i class="fas fa-moon text-base dark:hidden"></i>
+                        <i class="fas fa-sun text-base hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Row on Mobile / Right Column on Desktop: Study Set Select & Documents -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                
+                <!-- Study Set Selector Dropdown -->
+                <div class="flex-1 sm:flex-initial relative min-w-0">
+                    <select id="select-study-set" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold rounded-lg px-2.5 py-1.5 sm:py-2 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer truncate">
+                        <!-- Injected via JS -->
+                    </select>
+                </div>
+
+                <!-- Documents Hub Button -->
+                <button id="btn-open-manager" class="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 touch-target flex-shrink-0" title="Manage Study Sets & Files">
+                    <i class="fas fa-folder-open text-xs sm:text-sm"></i>
+                    <span>Files</span>
+                </button>
+
+                <!-- Desktop Stats & Theme Buttons -->
+                <div class="hidden sm:flex items-center gap-2">
+                    <button id="btn-stats" class="p-2 sm:px-3 sm:py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 touch-target" title="View Statistics">
+                        <div class="flex items-center gap-1 text-green-600 dark:text-green-400 font-bold">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="header-correct">0</span>
+                        </div>
+                        <span class="text-slate-300 dark:text-slate-700">|</span>
+                        <div class="flex items-center gap-1 text-red-500 dark:text-red-400 font-bold">
+                            <i class="fas fa-times-circle"></i>
+                            <span id="header-incorrect">0</span>
+                        </div>
+                    </button>
+
+                    <button id="btn-theme-toggle" class="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition touch-target" title="Toggle Light/Dark Theme">
+                        <i class="fas fa-moon text-lg dark:hidden"></i>
+                        <i class="fas fa-sun text-lg hidden dark:block"></i>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col justify-center items-center overflow-x-hidden">
+        
+        <!-- ================= Screen 1: Start Dashboard ================= -->
+        <section id="screen-start" class="w-full glass-card rounded-2xl p-4 sm:p-8 shadow-xl text-center animate-pop max-w-full overflow-hidden">
+            
+            <div class="w-14 h-14 sm:w-20 sm:h-20 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 text-blue-600 dark:text-blue-400 shadow-inner">
+                <i class="fas fa-graduation-cap text-2xl sm:text-4xl"></i>
+            </div>
+
+            <h2 id="display-set-name" class="text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 tracking-tight text-slate-900 dark:text-white break-words max-w-full">
+                Computer System Services
+            </h2>
+            <p id="display-set-desc" class="text-xs sm:text-base text-slate-500 dark:text-slate-400 mb-5 max-w-xl mx-auto break-words">
+                Test your knowledge across terms, concepts, and definitions. Upload single or bulk Word documents, PowerPoint presentations, Excel spreadsheets, PDFs, or photos/images of notes to create personalized study sets!
+            </p>
+
+            <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 mb-6 border border-slate-200 dark:border-slate-700">
+                <i class="fas fa-book text-blue-500"></i>
+                <span id="display-set-count">0 Terms Available</span>
+            </div>
+
+            <!-- Quiz Type Indicator Banner -->
+            <div class="bg-blue-50/80 dark:bg-slate-800/80 border border-blue-200 dark:border-slate-700 rounded-xl p-3.5 sm:p-4 max-w-md mx-auto mb-6 sm:mb-8 text-left">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-shuffle"></i> Randomized Question Formats
+                </h4>
+                <p class="text-xs text-slate-600 dark:text-slate-300">
+                    Questions will be generated randomly using 3 formats:
+                </p>
+                <ul class="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-200 space-y-1.5">
+                    <li class="flex items-center gap-2"><i class="fas fa-pen text-purple-500 w-4"></i> 1. Identification</li>
+                    <li class="flex items-center gap-2"><i class="fas fa-list-ul text-indigo-500 w-4"></i> 2. Multiple Choice</li>
+                    <li class="flex items-center gap-2"><i class="fas fa-check-double text-emerald-500 w-4"></i> 3. True / False (with explanations)</li>
+                </ul>
+            </div>
+
+            <!-- Start Button Actions -->
+            <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-3 max-w-md mx-auto">
+                <button id="btn-start-quiz" class="flex-1 py-3.5 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 active:scale-95 transition flex items-center justify-center gap-2 text-base touch-target">
+                    <span>Start Quiz</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                
+                <button id="btn-quick-upload" class="py-3.5 px-5 rounded-xl font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center gap-2 text-sm touch-target">
+                    <i class="fas fa-file-upload text-blue-500"></i>
+                    <span>Upload Documents / Images</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= Screen 2: Active Quiz Screen ================= -->
+        <section id="screen-quiz" class="w-full glass-card rounded-2xl p-4 sm:p-8 shadow-xl hidden animate-pop max-w-full overflow-hidden">
+            
+            <!-- Progress Bar & Counter -->
+            <div class="flex justify-between items-center mb-4 sm:mb-6 text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">
+                <span id="question-counter">Question #1</span>
+                <span id="question-type-badge" class="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold">
+                    Multiple Choice
+                </span>
+            </div>
+
+            <!-- Question Prompt Area -->
+            <div class="mb-5 sm:mb-6 min-h-[80px] sm:min-h-[90px] flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-3.5 sm:p-6 rounded-xl border border-slate-200/80 dark:border-slate-700/60 max-w-full">
+                <h3 id="question-text" class="text-base sm:text-xl md:text-2xl font-bold leading-snug text-center text-slate-800 dark:text-slate-100 break-words w-full">
+                    Loading question...
+                </h3>
+            </div>
+
+            <!-- Multiple Choice Container -->
+            <div id="choices-container" class="grid grid-cols-1 gap-2.5 sm:gap-3 mb-6 hidden w-full">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Identification Container -->
+            <div id="identification-container" class="mb-6 hidden w-full">
+                <label for="ident-input" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Type your answer below:</label>
+                <input type="text" id="ident-input" class="w-full p-3.5 sm:p-4 text-base sm:text-lg rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition dark:text-white" placeholder="Type answer here..." autocomplete="off">
+                <button id="btn-submit-ident" class="w-full mt-3 py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition touch-target">
+                    Submit Answer
+                </button>
+            </div>
+
+            <!-- True / False Container -->
+            <div id="tf-container" class="grid grid-cols-2 gap-2.5 sm:gap-3 mb-6 hidden w-full">
+                <button id="btn-tf-true" class="py-4 sm:py-6 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-extrabold text-lg sm:text-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/50 active:scale-95 transition flex flex-col items-center justify-center gap-1 touch-target">
+                    <i class="fas fa-check-circle text-xl sm:text-3xl"></i>
+                    <span>TRUE</span>
+                </button>
+
+                <button id="btn-tf-false" class="py-4 sm:py-6 rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-extrabold text-lg sm:text-2xl hover:bg-red-100 dark:hover:bg-red-900/50 active:scale-95 transition flex flex-col items-center justify-center gap-1 touch-target">
+                    <i class="fas fa-times-circle text-xl sm:text-3xl"></i>
+                    <span>FALSE</span>
+                </button>
+            </div>
+
+            <!-- Feedback Message Banner -->
+            <div id="quiz-feedback" class="hidden rounded-xl p-3.5 sm:p-4 text-center font-semibold text-xs sm:text-base animate-pop mb-4 break-words max-w-full">
+            </div>
+
+            <!-- Next Question Action Area -->
+            <div id="action-area" class="mt-5 sm:mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 hidden">
+                <button id="btn-next" class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md active:scale-95 transition flex items-center justify-center gap-2 text-base touch-target">
+                    <span>Next Question</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= Document & Study Set Manager Modal ================= -->
+    <div id="modal-manager" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl w-[95vw] sm:w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform scale-95 transition-transform duration-300" id="modal-manager-content">
+            
+            <!-- Modal Header -->
+            <div class="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-folder-plus text-blue-500 text-lg sm:text-xl"></i>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">Study Set & File Hub</h3>
+                </div>
+                <button id="btn-close-manager" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-3.5 sm:p-6 overflow-y-auto custom-scroll flex-1 space-y-5">
+                
+                <!-- Section A: File Upload Zone -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Upload Files (Docs, PDFs, PPTs, Excels, or Images)</h4>
+                    
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-4 sm:p-6 text-center bg-slate-50/50 dark:bg-slate-800/30 transition cursor-pointer flex flex-col items-center justify-center gap-2.5">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg sm:text-xl">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-xs sm:text-base text-slate-800 dark:text-slate-200">
+                                Drag & Drop file(s) here, or <span class="text-blue-500 underline">Browse Files</span>
+                            </p>
+                            <p class="text-[11px] sm:text-xs text-slate-400 mt-1">Supports Word, PowerPoint, Excel, PDF, TXT, CSV, & Images (PNG, JPG, WEBP)</p>
+                        </div>
+                        <input type="file" id="file-input" class="hidden" multiple accept=".docx,.pptx,.xlsx,.xls,.csv,.pdf,.txt,.md,.json,.png,.jpg,.jpeg,.webp,.bmp">
+                    </div>
+
+                    <!-- OCR / Batch Scan Progress Bar Banner -->
+                    <div id="ocr-progress-container" class="hidden mt-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold">
+                        <div class="flex justify-between items-center mb-1">
+                            <span id="ocr-progress-status" class="flex items-center gap-1.5 font-bold">
+                                <i class="fas fa-spinner fa-spin"></i> Scanning file...
+                            </span>
+                            <span id="ocr-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-blue-200 dark:bg-blue-900 rounded-full overflow-hidden">
+                            <div id="ocr-progress-bar" class="h-full bg-blue-600 dark:bg-blue-400 rounded-full transition-all duration-300 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section B: Create Custom Study Set Manually -->
+                <div class="border-t border-slate-100 dark:border-slate-800 pt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Available Study Sets</h4>
+                        <button id="btn-create-empty-set" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                            + Create Empty Set
+                        </button>
+                    </div>
+
+                    <div id="study-sets-list" class="space-y-2 max-h-48 overflow-y-auto custom-scroll pr-1">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Section C: Edit Selected Study Set Terms -->
+                <div id="edit-terms-section" class="border-t border-slate-100 dark:border-slate-800 pt-4 hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Term & Definition Items (<span id="edit-set-count">0</span>)</h4>
+                        <button id="btn-add-item" class="text-xs font-bold bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg hover:bg-blue-100">
+                            + Add Item
+                        </button>
+                    </div>
+
+                    <div id="items-editor-container" class="space-y-2 max-h-56 overflow-y-auto custom-scroll pr-1">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+                <button id="btn-export-json" class="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-500 flex items-center gap-1">
+                    <i class="fas fa-download"></i> Export JSON
+                </button>
+                <button id="btn-done-manager" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow">
+                    Done
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ================= Statistics & History Modal ================= -->
+    <div id="modal-stats" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl w-[95vw] sm:w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform scale-95 transition-transform duration-300" id="modal-stats-content">
+            
+            <div class="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">Review Session Stats</h3>
+                <button id="btn-close-stats" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-3.5 sm:p-6 overflow-y-auto custom-scroll space-y-5">
+                <!-- Score Cards -->
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 sm:p-4 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                        <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400" id="stat-correct">0</div>
+                        <div class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mt-1">Correct Answers</div>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-950/40 p-3.5 sm:p-4 rounded-xl border border-red-200 dark:border-red-800">
+                        <div class="text-2xl sm:text-3xl font-extrabold text-red-600 dark:text-red-400" id="stat-incorrect">0</div>
+                        <div class="text-xs font-semibold text-red-700 dark:text-red-300 mt-1">Incorrect Answers</div>
+                    </div>
+                </div>
+
+                <!-- Accuracy Progress -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span>Overall Accuracy</span>
+                        <span id="stat-accuracy">0%</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div id="stat-accuracy-bar" class="h-full bg-blue-500 rounded-full transition-all duration-500 w-0"></div>
+                    </div>
+                </div>
+
+                <!-- Question History List -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Question History</h4>
+                    <div id="history-container" class="space-y-2 max-h-60 overflow-y-auto custom-scroll pr-1">
+                        <div class="text-center text-slate-400 text-xs italic py-6" id="empty-history-msg">
+                            No questions answered yet in this session.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex gap-2.5 sm:gap-3">
+                <button id="btn-reset-stats" class="flex-1 py-2 sm:py-2.5 border-2 border-slate-300 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-100 text-xs sm:text-sm">
+                    Reset Session
+                </button>
+                <button id="btn-resume-quiz" class="flex-1 py-2 sm:py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 text-xs sm:text-sm">
+                    Resume Review
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Notification Container (Top Right Stack) -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 max-w-sm sm:max-w-md w-[calc(100vw-2.5rem)] pointer-events-none"></div>
+
+    <!-- Custom Modern Confirmation Modal -->
+    <div id="modal-confirm-dialog" class="fixed inset-0 z-[9990] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div id="modal-confirm-content" class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 transform scale-95 transition-all duration-300 flex flex-col gap-4 text-center relative overflow-hidden">
+            <!-- Glowing Header Aura & Icon -->
+            <div id="confirm-modal-icon-bg" class="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center mx-auto text-2xl shadow-lg shadow-blue-500/10 transition-colors duration-200">
+                <i id="confirm-modal-icon" class="fas fa-circle-question"></i>
+            </div>
+            <div>
+                <h3 id="confirm-modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100">Are you sure?</h3>
+                <p id="confirm-modal-message" class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mt-1.5"></p>
+            </div>
+            <div class="flex items-center gap-3 mt-2">
+                <button id="confirm-modal-btn-cancel" class="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl text-xs sm:text-sm transition touch-target">
+                    Cancel
+                </button>
+                <button id="confirm-modal-btn-ok" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-md shadow-blue-500/25 transition touch-target">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Core Script -->
+    <script>
+        // ================= PRESET DATA: Computer System Services =================
+        const presetCSS = {
+            id: 'preset-css',
+            name: 'Computer System Services (CSS)',
+            description: 'Comprehensive hardware, networking, software, and cybersecurity reviewer.',
+            items: [
+                { term: "Input", def: "Data or instructions entered into a computer system." },
+                { term: "Process", def: "The manipulation or computation of data performed by the CPU." },
+                { term: "Output", def: "The processed data presented to the user (e.g., text on a screen, audio)." },
+                { term: "CPU", def: "The 'brain' of the computer that executes instructions.", alias: ["Central Processing Unit"] },
+                { term: "Motherboard", def: "The main printed circuit board connecting all components of a computer." },
+                { term: "System Unit", def: "The main chassis or case that houses the internal components of a computer." },
+                { term: "RAM", def: "Volatile, high-speed short-term memory used to store active data.", alias: ["Random Access Memory"] },
+                { term: "ROM", def: "Non-volatile memory containing permanent data like the system BIOS.", alias: ["Read-Only Memory"] },
+                { term: "PSU", def: "Converts electrical power from an outlet into usable power for the computer.", alias: ["Power Supply Unit"] },
+                { term: "GPU", def: "A specialized processor designed to accelerate graphics rendering.", alias: ["Graphics Processing Unit"] },
+                { term: "SSD", def: "Fast, non-volatile storage that uses flash memory.", alias: ["Solid State Drive"] },
+                { term: "HDD", def: "Traditional, slower storage that uses spinning magnetic platters.", alias: ["Hard Disk Drive"] },
+                { term: "3.5\"", def: "The standard physical drive size for desktop HDDs." },
+                { term: "2.5\"", def: "The standard physical drive size for laptop HDDs and SSDs." },
+                { term: "Hardware", def: "The physical, tangible components of a computer system." },
+                { term: "Cache", def: "High-speed, temporary CPU memory used to speed up data retrieval." },
+                { term: "Bus", def: "A communication system that transfers data between components inside a computer." },
+                { term: "BIOS", def: "Firmware used to perform hardware initialization during booting.", alias: ["Basic Input/Output System"] },
+                { term: "UEFI", def: "A modern replacement for BIOS with faster boot times and more features.", alias: ["Unified Extensible Firmware Interface"] },
+                { term: "Peripherals", def: "Auxiliary devices used to put information into and get information out of the computer (e.g., keyboard, mouse)." },
+                { term: "Overclocking", def: "Running a component (like a CPU or GPU) at a higher speed than its factory rating." },
+                { term: "Form Factor", def: "The physical size, shape, and layout specification of hardware like motherboards and cases." },
+                { term: "Heat Sink", def: "A passive heat exchanger that cools a component by dissipating heat into the air." },
+                { term: "NVMe", def: "A modern, ultra-fast protocol designed for reading and writing data on solid-state drives." },
+                { term: "CTRL + Z", def: "Keyboard shortcut for Undo." },
+                { term: "CTRL + X", def: "Keyboard shortcut for Cut." },
+                { term: "CTRL + C", def: "Keyboard shortcut for Copy." },
+                { term: "CTRL + V", def: "Keyboard shortcut for Paste." },
+                { term: "CTRL + A", def: "Keyboard shortcut for Select All." },
+                { term: "CTRL + S", def: "Keyboard shortcut for Save." },
+                { term: "CTRL + F", def: "Keyboard shortcut for Find." },
+                { term: "OS", def: "System software that manages computer hardware and software resources.", alias: ["Operating System"] },
+                { term: "Windows", def: "A widely used proprietary operating system developed by Microsoft." },
+                { term: "macOS", def: "The proprietary operating system developed by Apple for Mac computers." },
+                { term: "Linux", def: "An open-source, Unix-like operating system kernel used widely in servers." },
+                { term: "Open Source", def: "Software with source code that anyone can inspect, modify, and enhance." },
+                { term: "Compiler", def: "A program that translates human-readable source code into machine code." },
+                { term: "Algorithm", def: "A step-by-step set of operations or rules to be followed in calculations or problem-solving." },
+                { term: "LAN", def: "A network confined to a small geographic area, like a home or office.", alias: ["Local Area Network"] },
+                { term: "WLAN", def: "A local network that relies on wireless communication (Wi-Fi).", alias: ["Wireless Local Area Network"] },
+                { term: "Malware", def: "Malicious software designed to disrupt, damage, or gain unauthorized access to a computer." },
+                { term: "Ransomware", def: "Malware that encrypts a user's files and demands payment for the decryption key." }
+            ]
+        };
+
+        // ================= STATE MANAGEMENT =================
+        let appState = {
+            studySets: [],
+            activeSetId: 'preset-css',
+            score: { correct: 0, incorrect: 0, count: 0 },
+            history: [],
+            currentQuestion: null,
+            isAnswered: false
+        };
+
+        // ================= LOCAL STORAGE HELPERS =================
+        const saveSetsToStorage = () => {
+            const customSets = appState.studySets.filter(s => s.id !== 'preset-css');
+            localStorage.setItem('universal_reviewer_sets', JSON.stringify(customSets));
+        };
+
+        const loadSetsFromStorage = () => {
+            appState.studySets = [presetCSS];
+            try {
+                const stored = localStorage.getItem('universal_reviewer_sets');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed)) appState.studySets.push(...parsed);
+                }
+            } catch (e) {
+                console.error("Error loading local study sets", e);
+            }
+        };
+
+        const getActiveSet = () => {
+            return appState.studySets.find(s => s.id === appState.activeSetId) || appState.studySets[0];
+        };
+
+        // ================= DOM ELEMENT REFERENCES =================
+        const els = {
+            selectStudySet: document.getElementById('select-study-set'),
+            headerCorrect: document.getElementById('header-correct'),
+            headerIncorrect: document.getElementById('header-incorrect'),
+            headerCorrectMobile: document.getElementById('header-correct-mobile'),
+            headerIncorrectMobile: document.getElementById('header-incorrect-mobile'),
+            btnThemeToggle: document.getElementById('btn-theme-toggle'),
+            btnThemeToggleMobile: document.getElementById('btn-theme-toggle-mobile'),
+            
+            // Screens
+            screenStart: document.getElementById('screen-start'),
+            screenQuiz: document.getElementById('screen-quiz'),
+
+            // Start Dashboard
+            displaySetName: document.getElementById('display-set-name'),
+            displaySetDesc: document.getElementById('display-set-desc'),
+            displaySetCount: document.getElementById('display-set-count'),
+            btnStartQuiz: document.getElementById('btn-start-quiz'),
+            btnQuickUpload: document.getElementById('btn-quick-upload'),
+
+            // Quiz Elements
+            questionCounter: document.getElementById('question-counter'),
+            questionTypeBadge: document.getElementById('question-type-badge'),
+            questionText: document.getElementById('question-text'),
+            choicesContainer: document.getElementById('choices-container'),
+            identificationContainer: document.getElementById('identification-container'),
+            identInput: document.getElementById('ident-input'),
+            btnSubmitIdent: document.getElementById('btn-submit-ident'),
+            tfContainer: document.getElementById('tf-container'),
+            btnTfTrue: document.getElementById('btn-tf-true'),
+            btnTfFalse: document.getElementById('btn-tf-false'),
+            quizFeedback: document.getElementById('quiz-feedback'),
+            actionArea: document.getElementById('action-area'),
+            btnNext: document.getElementById('btn-next'),
+
+            // Modals & Upload Progress
+            modalManager: document.getElementById('modal-manager'),
+            modalManagerContent: document.getElementById('modal-manager-content'),
+            dropZone: document.getElementById('drop-zone'),
+            fileInput: document.getElementById('file-input'),
+            ocrProgressContainer: document.getElementById('ocr-progress-container'),
+            ocrProgressStatus: document.getElementById('ocr-progress-status'),
+            ocrProgressPercent: document.getElementById('ocr-progress-percent'),
+            ocrProgressBar: document.getElementById('ocr-progress-bar'),
+            studySetsList: document.getElementById('study-sets-list'),
+            editTermsSection: document.getElementById('edit-terms-section'),
+            editSetCount: document.getElementById('edit-set-count'),
+            itemsEditorContainer: document.getElementById('items-editor-container'),
+
+            modalStats: document.getElementById('modal-stats'),
+            modalStatsContent: document.getElementById('modal-stats-content'),
+            statCorrect: document.getElementById('stat-correct'),
+            statIncorrect: document.getElementById('stat-incorrect'),
+            statAccuracy: document.getElementById('stat-accuracy'),
+            statAccuracyBar: document.getElementById('stat-accuracy-bar'),
+            historyContainer: document.getElementById('history-container'),
+            emptyHistoryMsg: document.getElementById('empty-history-msg')
+        };
+
+        // ================= UTILITIES =================
+        const getRandomInt = (max) => Math.floor(Math.random() * max);
+        
+        const shuffleArray = (arr) => {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        };
+
+        const showScreen = (screenId) => {
+            [els.screenStart, els.screenQuiz].forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        };
+
+        const toggleModal = (modalEl, contentEl, show) => {
+            if (show) {
+                modalEl.classList.remove('hidden');
+                setTimeout(() => {
+                    modalEl.classList.remove('opacity-0');
+                    contentEl.classList.remove('scale-95');
+                }, 10);
+            } else {
+                modalEl.classList.add('opacity-0');
+                contentEl.classList.add('scale-95');
+                setTimeout(() => modalEl.classList.add('hidden'), 250);
+            }
+        };
+
+        const updateScoreDisplay = () => {
+            if (els.headerCorrect) els.headerCorrect.textContent = appState.score.correct;
+            if (els.headerIncorrect) els.headerIncorrect.textContent = appState.score.incorrect;
+            if (els.headerCorrectMobile) els.headerCorrectMobile.textContent = appState.score.correct;
+            if (els.headerIncorrectMobile) els.headerIncorrectMobile.textContent = appState.score.incorrect;
+        };
+
+        // ================= MODERN TOAST & DIALOG SYSTEM =================
+        const toastContainer = document.getElementById('toast-container');
+
+        const showToast = ({ type = 'success', title = '', message = '', duration = 4500 }) => {
+            if (!toastContainer) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast-enter pointer-events-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border shadow-2xl rounded-2xl p-4 flex items-start gap-3.5 relative overflow-hidden group transition-all duration-300`;
+
+            const iconMap = {
+                success: { icon: 'fa-circle-check', text: 'text-emerald-500 dark:text-emerald-400', bg: 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20', border: 'border-emerald-500/30 dark:border-emerald-500/20', bar: 'bg-emerald-500' },
+                info: { icon: 'fa-circle-info', text: 'text-blue-500 dark:text-blue-400', bg: 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20', border: 'border-blue-500/30 dark:border-blue-500/20', bar: 'bg-blue-500' },
+                warning: { icon: 'fa-triangle-exclamation', text: 'text-amber-500 dark:text-amber-400', bg: 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20', border: 'border-amber-500/30 dark:border-amber-500/20', bar: 'bg-amber-500' },
+                error: { icon: 'fa-circle-xmark', text: 'text-rose-500 dark:text-rose-400', bg: 'bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20', border: 'border-rose-500/30 dark:border-rose-500/20', bar: 'bg-rose-500' }
+            };
+
+            const style = iconMap[type] || iconMap.info;
+            const borderClasses = style.border.split(' ');
+            toast.classList.add(borderClasses[0], borderClasses[1] || 'border-slate-200');
+
+            const titleText = title || (type.charAt(0).toUpperCase() + type.slice(1));
+
+            toast.innerHTML = `
+                <div class="w-9 h-9 rounded-xl ${style.bg} border ${style.border} flex items-center justify-center flex-shrink-0 ${style.text} shadow-sm">
+                    <i class="fas ${style.icon} text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0 pr-2">
+                    <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">${titleText}</h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed break-words">${message}</p>
+                </div>
+                <button class="toast-close text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors flex-shrink-0">
+                    <i class="fas fa-xmark text-sm"></i>
+                </button>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800/80">
+                    <div class="toast-progress h-full ${style.bar} transition-all ease-linear" style="width: 100%;"></div>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            const progressBar = toast.querySelector('.toast-progress');
+            const closeBtn = toast.querySelector('.toast-close');
+            let startTime = Date.now();
+            let remaining = duration;
+            let animFrameId = null;
+
+            const dismiss = () => {
+                cancelAnimationFrame(animFrameId);
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                setTimeout(() => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 300);
+            };
+
+            const updateProgress = () => {
+                const elapsed = Date.now() - startTime;
+                const percent = Math.max(0, 100 - (elapsed / duration) * 100);
+                if (progressBar) progressBar.style.width = `${percent}%`;
+                if (elapsed < duration) {
+                    animFrameId = requestAnimationFrame(updateProgress);
+                } else {
+                    dismiss();
+                }
+            };
+
+            animFrameId = requestAnimationFrame(updateProgress);
+
+            // Pause progress bar on mouse hover
+            toast.addEventListener('mouseenter', () => {
+                cancelAnimationFrame(animFrameId);
+                remaining -= (Date.now() - startTime);
+            });
+
+            toast.addEventListener('mouseleave', () => {
+                startTime = Date.now();
+                duration = Math.max(500, remaining);
+                animFrameId = requestAnimationFrame(updateProgress);
+            });
+
+            closeBtn.onclick = dismiss;
+        };
+
+        const showConfirmModal = ({ title = 'Are you sure?', message = '', confirmText = 'Confirm', cancelText = 'Cancel', type = 'info' }) => {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modal-confirm-dialog');
+                const modalContent = document.getElementById('modal-confirm-content');
+                const titleEl = document.getElementById('confirm-modal-title');
+                const msgEl = document.getElementById('confirm-modal-message');
+                const iconBg = document.getElementById('confirm-modal-icon-bg');
+                const iconEl = document.getElementById('confirm-modal-icon');
+                const btnOk = document.getElementById('confirm-modal-btn-ok');
+                const btnCancel = document.getElementById('confirm-modal-btn-cancel');
+
+                titleEl.textContent = title;
+                msgEl.innerHTML = message;
+                btnOk.textContent = confirmText;
+                btnCancel.textContent = cancelText;
+
+                if (type === 'danger') {
+                    iconBg.className = "w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center mx-auto text-2xl shadow-lg shadow-rose-500/10";
+                    iconEl.className = "fas fa-trash-can";
+                    btnOk.className = "flex-1 py-2.5 px-4 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-md shadow-rose-500/25 transition touch-target";
+                } else if (type === 'warning') {
+                    iconBg.className = "w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center mx-auto text-2xl shadow-lg shadow-amber-500/10";
+                    iconEl.className = "fas fa-triangle-exclamation";
+                    btnOk.className = "flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-md shadow-amber-500/25 transition touch-target";
+                } else {
+                    iconBg.className = "w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center mx-auto text-2xl shadow-lg shadow-blue-500/10";
+                    iconEl.className = "fas fa-circle-question";
+                    btnOk.className = "flex-1 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-md shadow-blue-500/25 transition touch-target";
+                }
+
+                toggleModal(modal, modalContent, true);
+
+                const cleanup = (result) => {
+                    toggleModal(modal, modalContent, false);
+                    btnOk.onclick = null;
+                    btnCancel.onclick = null;
+                    modal.onclick = null;
+                    resolve(result);
+                };
+
+                btnOk.onclick = () => cleanup(true);
+                btnCancel.onclick = () => cleanup(false);
+                modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
+            });
+        };
+
+        // Window alert & confirm overrides as modern fallbacks
+        window.alert = (msg) => {
+            showToast({ type: 'info', title: 'Notification', message: msg });
+        };
+
+        // ================= STUDY SET SELECTOR UI =================
+        const renderSetSelector = () => {
+            els.selectStudySet.innerHTML = appState.studySets.map(set => 
+                `<option value="${set.id}" ${set.id === appState.activeSetId ? 'selected' : ''}>${set.name} (${set.items.length})</option>`
+            ).join('');
+
+            const active = getActiveSet();
+            els.displaySetName.textContent = active.name;
+            els.displaySetDesc.textContent = active.description || 'Custom document reviewer study set.';
+            els.displaySetCount.textContent = `${active.items.length} Terms Available`;
+        };
+
+        els.selectStudySet.addEventListener('change', (e) => {
+            appState.activeSetId = e.target.value;
+            renderSetSelector();
+        });
+
+        // ================= QUIZ ENGINE =================
+        const startQuizSession = () => {
+            const activeSet = getActiveSet();
+            if (!activeSet.items || activeSet.items.length === 0) {
+                showToast({ type: 'warning', title: 'Study Set Empty', message: 'This study set has no items! Please add items or upload a document first.' });
+                toggleModal(els.modalManager, els.modalManagerContent, true);
+                return;
+            }
+
+            showScreen('screen-quiz');
+            generateQuestion();
+        };
+
+        const generateQuestion = () => {
+            appState.isAnswered = false;
+            appState.score.count++;
+            
+            els.questionCounter.textContent = `Question #${appState.score.count}`;
+            els.actionArea.classList.add('hidden');
+            els.quizFeedback.classList.add('hidden');
+
+            const activeSet = getActiveSet();
+            const targetItem = activeSet.items[getRandomInt(activeSet.items.length)];
+
+            // Randomly select between the 3 allowed question formats: MCQ, Identification, True/False
+            const allowedModes = ['mcq', 'ident', 'tf'];
+            const qMode = allowedModes[getRandomInt(allowedModes.length)];
+
+            appState.currentQuestion = { targetItem, mode: qMode };
+
+            // Hide containers
+            els.choicesContainer.classList.add('hidden');
+            els.identificationContainer.classList.add('hidden');
+            els.tfContainer.classList.add('hidden');
+
+            if (qMode === 'mcq') {
+                els.questionTypeBadge.textContent = 'Multiple Choice';
+                els.questionTypeBadge.className = 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
+                els.questionText.textContent = `What is the term for: "${targetItem.def}"`;
+                setupMCQ(targetItem, activeSet.items);
+            } else if (qMode === 'ident') {
+                els.questionTypeBadge.textContent = 'Identification';
+                els.questionTypeBadge.className = 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
+                els.questionText.textContent = `Identify the term: "${targetItem.def}"`;
+                setupIdentification();
+            } else if (qMode === 'tf') {
+                els.questionTypeBadge.textContent = 'True or False';
+                els.questionTypeBadge.className = 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
+                
+                // 50% chance of being True statement, 50% chance of False (swapped definition)
+                const isTrue = Math.random() > 0.5;
+                let displayedDef = targetItem.def;
+                let swappedItem = null;
+
+                if (!isTrue && activeSet.items.length > 1) {
+                    let otherItems = activeSet.items.filter(i => i.term !== targetItem.term);
+                    swappedItem = otherItems[getRandomInt(otherItems.length)];
+                    displayedDef = swappedItem.def;
+                }
+                appState.currentQuestion.isTrueStatement = isTrue;
+                appState.currentQuestion.swappedItem = swappedItem;
+                els.questionText.innerHTML = `<span class="text-xs sm:text-sm block font-normal text-slate-400 mb-1">True or False statement:</span> "${targetItem.term}" means "${displayedDef}"`;
+                setupTrueFalse();
+            }
+        };
+
+        // --- MCQ SETUP & LOGIC ---
+        const setupMCQ = (targetItem, allItems) => {
+            els.choicesContainer.classList.remove('hidden');
+            els.choicesContainer.innerHTML = '';
+
+            let choices = [targetItem.term];
+            while (choices.length < Math.min(4, allItems.length)) {
+                const randTerm = allItems[getRandomInt(allItems.length)].term;
+                if (!choices.includes(randTerm)) choices.push(randTerm);
+            }
+            choices = shuffleArray(choices);
+            const letters = ['A', 'B', 'C', 'D'];
+
+            choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'mcq-choice-btn w-full p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium text-left transition flex items-center justify-between touch-target hover:border-blue-400 break-words';
+                btn.innerHTML = `
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                        <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-extrabold flex items-center justify-center text-xs sm:text-sm flex-shrink-0">${letters[index]}</span>
+                        <span class="text-xs sm:text-base font-semibold choice-text break-words min-w-0">${choice}</span>
+                    </div>
+                    <i class="status-icon fas hidden text-base sm:text-lg flex-shrink-0 ml-2"></i>
+                `;
+                btn.onclick = () => handleMCQAnswer(btn, choice, targetItem.term);
+                els.choicesContainer.appendChild(btn);
+            });
+        };
+
+        const handleMCQAnswer = (selectedBtn, selectedTerm, correctTerm) => {
+            if (appState.isAnswered) return;
+            appState.isAnswered = true;
+
+            const isCorrect = selectedTerm === correctTerm;
+            const buttons = els.choicesContainer.querySelectorAll('.mcq-choice-btn');
+
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                const text = btn.querySelector('.choice-text').textContent;
+                const icon = btn.querySelector('.status-icon');
+                icon.classList.remove('hidden');
+
+                if (text === correctTerm) {
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'text-emerald-800', 'dark:text-emerald-300');
+                    icon.classList.add('fa-check-circle', 'text-emerald-500');
+                } else if (text === selectedTerm && !isCorrect) {
+                    btn.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-950/40', 'text-red-800', 'dark:text-red-300');
+                    icon.classList.add('fa-times-circle', 'text-red-500');
+                } else {
+                    btn.classList.add('opacity-40');
+                }
+            });
+
+            showQuizFeedback(isCorrect, isCorrect ? "Correct answer!" : `Incorrect! The correct answer is "${correctTerm}".`);
+            processResult(isCorrect, selectedTerm, correctTerm);
+        };
+
+        // --- IDENTIFICATION SETUP & LOGIC ---
+        const setupIdentification = () => {
+            els.identificationContainer.classList.remove('hidden');
+            els.identInput.value = '';
+            els.identInput.disabled = false;
+            els.btnSubmitIdent.disabled = false;
+            setTimeout(() => els.identInput.focus(), 100);
+        };
+
+        const handleIdentAnswer = () => {
+            if (appState.isAnswered) return;
+            const userAns = els.identInput.value.trim().toLowerCase();
+            if (!userAns) return;
+
+            appState.isAnswered = true;
+            els.identInput.disabled = true;
+            els.btnSubmitIdent.disabled = true;
+
+            const targetItem = appState.currentQuestion.targetItem;
+            let isCorrect = userAns === targetItem.term.toLowerCase();
+
+            if (!isCorrect && targetItem.alias) {
+                isCorrect = targetItem.alias.some(a => a.toLowerCase() === userAns);
+            }
+
+            showQuizFeedback(isCorrect, isCorrect ? "Spot on! Correct identification." : `Incorrect! Correct answer is "${targetItem.term}".`);
+            processResult(isCorrect, els.identInput.value, targetItem.term);
+        };
+
+        els.btnSubmitIdent.onclick = handleIdentAnswer;
+        els.identInput.onkeypress = (e) => { if (e.key === 'Enter') handleIdentAnswer(); };
+
+        // --- TRUE / FALSE SETUP & LOGIC ---
+        const setupTrueFalse = () => {
+            els.tfContainer.classList.remove('hidden');
+            els.btnTfTrue.disabled = false;
+            els.btnTfFalse.disabled = false;
+        };
+
+        const handleTFAnswer = (userChoice) => {
+            if (appState.isAnswered) return;
+            appState.isAnswered = true;
+
+            const isTrueStatement = appState.currentQuestion.isTrueStatement;
+            const targetItem = appState.currentQuestion.targetItem;
+            const swappedItem = appState.currentQuestion.swappedItem;
+            const isCorrect = userChoice === isTrueStatement;
+
+            els.btnTfTrue.disabled = true;
+            els.btnTfFalse.disabled = true;
+
+            let feedbackMsg = '';
+            if (isTrueStatement) {
+                if (isCorrect) {
+                    feedbackMsg = `<span class="font-bold text-emerald-600 dark:text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Correct!</span> The statement is TRUE. <em>"${targetItem.term}"</em> means <em>"${targetItem.def}"</em>.`;
+                } else {
+                    feedbackMsg = `<span class="font-bold text-red-600 dark:text-red-400"><i class="fas fa-times-circle mr-1"></i>Incorrect!</span> The statement was TRUE. <em>"${targetItem.term}"</em> really does mean <em>"${targetItem.def}"</em>.`;
+                }
+            } else {
+                // Statement is FALSE -> Give clear explanation why!
+                const reasonText = `<strong>Why it's FALSE:</strong> <em>"${targetItem.term}"</em> actually means <strong>"${targetItem.def}"</strong>. ${swappedItem ? `(The definition shown belongs to <strong>"${swappedItem.term}"</strong>).` : ''}`;
+                
+                if (isCorrect) {
+                    feedbackMsg = `<span class="font-bold text-emerald-600 dark:text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Correct!</span> You correctly identified that this statement is FALSE.<br><span class="text-xs sm:text-sm mt-1 block font-normal text-slate-700 dark:text-slate-200">${reasonText}</span>`;
+                } else {
+                    feedbackMsg = `<span class="font-bold text-red-600 dark:text-red-400"><i class="fas fa-times-circle mr-1"></i>Incorrect!</span> The statement is FALSE.<br><span class="text-xs sm:text-sm mt-1 block font-normal text-slate-700 dark:text-slate-200">${reasonText}</span>`;
+                }
+            }
+
+            showQuizFeedback(isCorrect, feedbackMsg);
+            processResult(isCorrect, userChoice ? 'True' : 'False', isTrueStatement ? 'True' : 'False');
+        };
+
+        els.btnTfTrue.onclick = () => handleTFAnswer(true);
+        els.btnTfFalse.onclick = () => handleTFAnswer(false);
+
+        // --- RESULT PROCESSOR ---
+        const showQuizFeedback = (isSuccess, message) => {
+            els.quizFeedback.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-red-100', 'text-red-800', 'dark:bg-emerald-950/60', 'dark:text-emerald-300', 'dark:bg-red-950/60', 'dark:text-red-300');
+            if (isSuccess) {
+                els.quizFeedback.classList.add('bg-emerald-100', 'text-emerald-800', 'dark:bg-emerald-950/60', 'dark:text-emerald-300');
+                els.quizFeedback.innerHTML = message;
+            } else {
+                els.quizFeedback.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-950/60', 'dark:text-red-300');
+                els.quizFeedback.innerHTML = message;
+            }
+            els.actionArea.classList.remove('hidden');
+        };
+
+        const processResult = (isCorrect, userAns, actualAns) => {
+            if (isCorrect) {
+                appState.score.correct++;
+            } else {
+                appState.score.incorrect++;
+            }
+            updateScoreDisplay();
+
+            appState.history.unshift({
+                q: appState.currentQuestion.targetItem.def,
+                type: appState.currentQuestion.mode,
+                correct: isCorrect,
+                userAns: userAns,
+                actualAns: actualAns
+            });
+        };
+
+        els.btnNext.onclick = generateQuestion;
+
+        // ================= DOCUMENT & BULK IMAGE OCR ENGINE =================
+        const setProgressStatus = (statusText, percent = 0) => {
+            els.ocrProgressContainer.classList.remove('hidden');
+            els.ocrProgressStatus.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> ${statusText}`;
+            els.ocrProgressPercent.textContent = `${percent}%`;
+            els.ocrProgressBar.style.width = `${percent}%`;
+        };
+
+        const hideProgressStatus = () => {
+            els.ocrProgressContainer.classList.add('hidden');
+            els.ocrProgressBar.style.width = '0%';
+        };
+
+        const processUploadedFiles = async (fileList) => {
+            const files = Array.from(fileList);
+            if (files.length === 0) return;
+
+            let allExtractedText = '';
+            let allParsedItems = [];
+            const imageExts = ['png', 'jpg', 'jpeg', 'webp', 'bmp'];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                const progressPrefix = files.length > 1 ? `[${i + 1}/${files.length}] ${file.name}` : file.name;
+
+                setProgressStatus(`Processing ${progressPrefix}...`, Math.round((i / files.length) * 100));
+
+                try {
+                    let fileText = '';
+
+                    if (imageExts.includes(fileExt)) {
+                        // Image OCR Scanning via Tesseract.js
+                        if (!window.Tesseract) {
+                            showToast({ type: 'warning', title: 'OCR Initializing', message: 'Tesseract OCR library is loading... Please try again in 5 seconds.' });
+                            return;
+                        }
+                        
+                        setProgressStatus(`OCR Scanning Image ${progressPrefix}...`, Math.round((i / files.length) * 100));
+                        
+                        const worker = await Tesseract.createWorker('eng');
+                        const ret = await worker.recognize(file);
+                        fileText = ret.data.text;
+                        await worker.terminate();
+                    } else if (fileExt === 'docx') {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                        fileText = result.value;
+                    } else if (['xlsx', 'xls', 'csv'].includes(fileExt)) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                        rows.forEach(row => {
+                            if (row && row.length >= 2 && row[0] && row[1]) {
+                                allParsedItems.push({
+                                    term: cleanTerm(String(row[0])),
+                                    def: String(row[1]).trim()
+                                });
+                            }
+                        });
+                    } else if (fileExt === 'pptx') {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const zip = await JSZip.loadAsync(arrayBuffer);
+                        const slideFiles = Object.keys(zip.files).filter(fileName => fileName.startsWith('ppt/slides/slide'));
+
+                        for (const slideFileName of slideFiles) {
+                            const slideXml = await zip.files[slideFileName].async('string');
+                            const matches = slideXml.match(/<a:t[^>]*>(.*?)<\/a:t>/g);
+                            if (matches) {
+                                const slideTexts = matches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean);
+                                if (slideTexts.length >= 2) {
+                                    allParsedItems.push({
+                                        term: cleanTerm(slideTexts[0]),
+                                        def: slideTexts.slice(1).join(' ')
+                                    });
+                                }
+                            }
+                        }
+                    } else if (fileExt === 'pdf') {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        let pageLines = [];
+
+                        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                            const page = await pdf.getPage(pageNum);
+                            const textContent = await page.getTextContent();
+                            
+                            let lastY = null;
+                            let currentLine = '';
+
+                            for (const item of textContent.items) {
+                                if (!item.str) continue;
+                                const currentY = item.transform ? item.transform[5] : null;
+
+                                if (lastY !== null && currentY !== null && Math.abs(currentY - lastY) > 4) {
+                                    if (currentLine.trim()) pageLines.push(currentLine.trim());
+                                    currentLine = item.str;
+                                } else {
+                                    currentLine += (currentLine ? ' ' : '') + item.str;
+                                }
+                                lastY = currentY;
+                            }
+                            if (currentLine.trim()) pageLines.push(currentLine.trim());
+                        }
+                        fileText = pageLines.join('\n');
+                    } else {
+                        // Plain text / Markdown / JSON
+                        fileText = await file.text();
+                        if (fileExt === 'json') {
+                            try {
+                                const jsonData = JSON.parse(fileText);
+                                if (Array.isArray(jsonData)) allParsedItems.push(...jsonData);
+                            } catch (e) {}
+                        }
+                    }
+
+                    if (fileText) {
+                        allExtractedText += fileText + '\n\n';
+                    }
+
+                } catch (err) {
+                    console.error(`Error parsing file ${file.name}:`, err);
+                }
+            }
+
+            setProgressStatus("Extracted text! Generating question items...", 90);
+
+            // Extract term-definition items from combined extracted text
+            if (allExtractedText.trim()) {
+                const itemsFromText = extractItemsFromText(allExtractedText);
+                allParsedItems.push(...itemsFromText);
+            }
+
+            // Deduplicate items by term
+            const seen = new Set();
+            const finalItems = [];
+            allParsedItems.forEach(item => {
+                const cleanT = cleanTerm(item.term);
+                if (cleanT && cleanT.length >= 2 && item.def && item.def.length >= 3) {
+                    const key = cleanT.toLowerCase();
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        finalItems.push({
+                            ...item,
+                            term: cleanT
+                        });
+                    }
+                }
+            });
+
+            hideProgressStatus();
+
+            const setName = files.length === 1 
+                ? files[0].name.replace(/\.[^/.]+$/, "") 
+                : `Batch Set (${files.length} Files)`;
+
+            if (finalItems.length === 0) {
+                showToast({ type: 'warning', title: 'No Concepts Detected', message: 'Uploaded file(s) processed, but no term-definition pairs were automatically detected. An empty set was created so you can add items manually!' });
+            }
+
+            const newSet = {
+                id: 'custom-' + Date.now(),
+                name: setName,
+                description: `Created from ${files.length} uploaded file(s) (${finalItems.length} terms)`,
+                items: finalItems
+            };
+
+            appState.studySets.push(newSet);
+            appState.activeSetId = newSet.id;
+            saveSetsToStorage();
+            renderSetSelector();
+            renderManagerSetsList();
+            renderItemsEditor(newSet.id);
+            showToast({ type: 'success', title: 'Parsing Complete! 🎉', message: `Parsed <strong>${files.length}</strong> file(s) and extracted <strong>${newSet.items.length}</strong> clean question concepts into "<strong>${newSet.name}</strong>"!`, duration: 6000 });
+        };
+
+        // --- INTELLECTUAL TERM CLEANER ---
+        const cleanTerm = (rawTerm) => {
+            if (!rawTerm) return '';
+            return rawTerm
+                // Remove weird UTF-8 / PDF bullet artifacts (e.g. â€¢, Ã¢â‚¬Â¢, \u2022, etc.)
+                .replace(/^[^a-zA-Z0-9]+/, '')
+                // Remove leading 1-2 letter lowercase bullet artifacts (e.g. "eo Key Interfaces", "v Core Components", "o Form Factors")
+                .replace(/^[a-z]{1,2}\s+(?=[A-Z0-9])/, '')
+                // Remove leading numbers or bullets like "1. ", "• "
+                .replace(/^(?:\d+[\.\)]\s*|•|\*|\-|\#+)\s*/, '')
+                .trim();
+        };
+
+        const extractItemsFromText = (text) => {
+            const items = [];
+            if (!text || typeof text !== 'string') return items;
+
+            // Normalize line endings, non-breaking spaces, and bullet symbols
+            const cleanText = text
+                .replace(/[\u25CF\u2022\u25CB\u25A0\u25AA]/g, '•')
+                .replace(/\u00A0/g, ' ')
+                .replace(/\r\n/g, '\n');
+
+            const rawLines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
+
+            let currentHeading = '';
+
+            for (let i = 0; i < rawLines.length; i++) {
+                const line = rawLines[i];
+
+                // Check for Section Heading (e.g. "1. Central Processing Unit (CPU)", "2. Motherboard")
+                const headingMatch = line.match(/^(?:\d+[\.\)]\s*|#{1,6}\s+)?([A-Z0-9][A-Za-z0-9\s\(\)\-\/\,]{2,70})$/);
+
+                // Check for Inline Key-Value / Bullet pair (e.g. "• Key Interfaces: CPU socket...", "RAM: Random Access Memory")
+                const inlineMatch = line.match(/^(?:[•\*\-\d\.\)\s]*|[a-z]{1,2}\s+)?([^:–\-]{2,80})[:–\-]\s*(.+)$/i);
+
+                if (inlineMatch && inlineMatch[1] && inlineMatch[2]) {
+                    let rawTerm = inlineMatch[1].trim();
+                    let def = inlineMatch[2].trim();
+                    let cleanedTerm = cleanTerm(rawTerm);
+
+                    if (cleanedTerm.length >= 2 && def.length >= 4) {
+                        let displayTerm = cleanedTerm;
+                        let aliases = [];
+
+                        if (currentHeading && !cleanedTerm.toLowerCase().includes(currentHeading.toLowerCase())) {
+                            aliases.push(`${currentHeading} - ${cleanedTerm}`);
+                        }
+
+                        items.push({
+                            term: displayTerm,
+                            def: def,
+                            alias: aliases.length > 0 ? aliases : undefined
+                        });
+                    }
+                } else if (headingMatch && i + 1 < rawLines.length) {
+                    const headingCandidate = cleanTerm(headingMatch[1]);
+                    const nextLine = rawLines[i + 1];
+
+                    const isNextHeadingOrBullet = nextLine.match(/^(?:\d+[\.\)]|[•\*\-]|[^:–\-]{2,50}[:–\-])/);
+
+                    if (headingCandidate && headingCandidate.length >= 2) {
+                        currentHeading = headingCandidate;
+
+                        if (!isNextHeadingOrBullet && nextLine.length >= 8 && !headingCandidate.toLowerCase().includes('table of contents') && !headingCandidate.toLowerCase().includes('notes')) {
+                            items.push({
+                                term: headingCandidate,
+                                def: nextLine
+                            });
+                            i++; // consume next line as definition
+                        }
+                    }
+                }
+            }
+
+            // Fallback strategy: Sentence / Definition extractor if few items found
+            if (items.length < 3) {
+                const sentences = text.split(/(?<=[.?!])\s+/);
+                sentences.forEach(s => {
+                    const match = s.match(/^([A-Z][A-Za-z0-9\s]{2,40})\s+(is|are|refers to|executes|provides|converts|acts as)\s+(.+)$/i);
+                    if (match) {
+                        const term = cleanTerm(match[1]);
+                        if (term) {
+                            items.push({ term: term, def: `${term} ${match[2]} ${match[3].trim()}` });
+                        }
+                    }
+                });
+            }
+
+            // Deduplicate items by term
+            const uniqueItems = [];
+            const seen = new Set();
+            items.forEach(item => {
+                const cleanT = cleanTerm(item.term);
+                if (cleanT && cleanT.length >= 2 && item.def && item.def.length >= 3) {
+                    const key = cleanT.toLowerCase();
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueItems.push({
+                            ...item,
+                            term: cleanT
+                        });
+                    }
+                }
+            });
+
+            return uniqueItems;
+        };
+
+        // --- DROPZONE EVENT LISTENERS ---
+        els.dropZone.onclick = () => els.fileInput.click();
+        els.fileInput.onchange = (e) => {
+            if (e.target.files && e.target.files.length > 0) processUploadedFiles(e.target.files);
+        };
+
+        els.dropZone.ondragover = (e) => { e.preventDefault(); els.dropZone.classList.add('border-blue-500', 'bg-blue-50'); };
+        els.dropZone.ondragleave = () => els.dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        els.dropZone.ondrop = (e) => {
+            e.preventDefault();
+            els.dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) processUploadedFiles(e.dataTransfer.files);
+        };
+
+        // ================= STUDY SET MANAGER UI =================
+        const renderManagerSetsList = () => {
+            els.studySetsList.innerHTML = appState.studySets.map(set => `
+                <div class="p-3 rounded-xl border ${set.id === appState.activeSetId ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-900/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'} flex items-center justify-between min-w-0">
+                    <div class="min-w-0 flex-1 pr-2">
+                        <div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 truncate">${set.name}</div>
+                        <div class="text-[11px] text-slate-400">${set.items.length} items</div>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <button onclick="selectManagerSet('${set.id}')" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-semibold text-xs">
+                            Select
+                        </button>
+                        ${set.id !== 'preset-css' ? `<button onclick="deleteManagerSet('${set.id}')" class="p-1 text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.selectManagerSet = (setId) => {
+            appState.activeSetId = setId;
+            renderSetSelector();
+            renderManagerSetsList();
+            renderItemsEditor(setId);
+        };
+
+        window.deleteManagerSet = async (setId) => {
+            const confirmed = await showConfirmModal({
+                title: 'Delete Study Set?',
+                message: 'Are you sure you want to delete this study set? This action cannot be undone.',
+                confirmText: 'Delete Set',
+                cancelText: 'Cancel',
+                type: 'danger'
+            });
+
+            if (confirmed) {
+                appState.studySets = appState.studySets.filter(s => s.id !== setId);
+                if (appState.activeSetId === setId) appState.activeSetId = 'preset-css';
+                saveSetsToStorage();
+                renderSetSelector();
+                renderManagerSetsList();
+                els.editTermsSection.classList.add('hidden');
+                showToast({ type: 'info', title: 'Study Set Deleted', message: 'The study set has been removed.' });
+            }
+        };
+
+        const renderItemsEditor = (setId) => {
+            const set = appState.studySets.find(s => s.id === setId);
+            if (!set) return;
+
+            els.editTermsSection.classList.remove('hidden');
+            els.editSetCount.textContent = set.items.length;
+
+            els.itemsEditorContainer.innerHTML = set.items.map((item, idx) => `
+                <div class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                    <input type="text" value="${item.term}" onchange="updateItemTerm('${setId}', ${idx}, this.value)" class="flex-1 p-2 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white font-semibold" placeholder="Term">
+                    <input type="text" value="${item.def}" onchange="updateItemDef('${setId}', ${idx}, this.value)" class="flex-2 p-2 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white" placeholder="Definition">
+                    <button onclick="removeItem('${setId}', ${idx})" class="text-red-500 self-end sm:self-center px-2 py-1"><i class="fas fa-trash sm:fa-times"></i></button>
+                </div>
+            `).join('');
+        };
+
+        window.updateItemTerm = (setId, idx, val) => {
+            const set = appState.studySets.find(s => s.id === setId);
+            if (set && set.items[idx]) { set.items[idx].term = val; saveSetsToStorage(); renderSetSelector(); }
+        };
+
+        window.updateItemDef = (setId, idx, val) => {
+            const set = appState.studySets.find(s => s.id === setId);
+            if (set && set.items[idx]) { set.items[idx].def = val; saveSetsToStorage(); }
+        };
+
+        window.removeItem = (setId, idx) => {
+            const set = appState.studySets.find(s => s.id === setId);
+            if (set) { set.items.splice(idx, 1); saveSetsToStorage(); renderSetSelector(); renderItemsEditor(setId); }
+        };
+
+        document.getElementById('btn-add-item').onclick = () => {
+            const set = getActiveSet();
+            set.items.push({ term: "New Term", def: "New Definition" });
+            saveSetsToStorage();
+            renderSetSelector();
+            renderItemsEditor(set.id);
+        };
+
+        document.getElementById('btn-create-empty-set').onclick = () => {
+            const newSet = {
+                id: 'custom-' + Date.now(),
+                name: 'New Custom Study Set',
+                description: 'Created manually.',
+                items: [{ term: "Sample Term", def: "Sample Definition" }]
+            };
+            appState.studySets.push(newSet);
+            appState.activeSetId = newSet.id;
+            saveSetsToStorage();
+            renderSetSelector();
+            renderManagerSetsList();
+            renderItemsEditor(newSet.id);
+        };
+
+        document.getElementById('btn-export-json').onclick = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getActiveSet(), null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `${getActiveSet().name.toLowerCase().replace(/\s+/g, '_')}_reviewer.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        };
+
+        // ================= STATS MODAL UI =================
+        const renderStatsModal = () => {
+            els.statCorrect.textContent = appState.score.correct;
+            els.statIncorrect.textContent = appState.score.incorrect;
+
+            const total = appState.score.correct + appState.score.incorrect;
+            const accuracy = total === 0 ? 0 : Math.round((appState.score.correct / total) * 100);
+
+            els.statAccuracy.textContent = `${accuracy}%`;
+            els.statAccuracyBar.style.width = `${accuracy}%`;
+
+            if (appState.history.length === 0) {
+                els.emptyHistoryMsg.style.display = 'block';
+                els.historyContainer.innerHTML = '';
+                els.historyContainer.appendChild(els.emptyHistoryMsg);
+            } else {
+                els.emptyHistoryMsg.style.display = 'none';
+                els.historyContainer.innerHTML = appState.history.map(item => `
+                    <div class="p-3 rounded-xl border-l-4 ${item.correct ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40' : 'border-red-500 bg-red-50/60 dark:bg-red-950/40'} text-xs">
+                        <div class="font-semibold text-slate-800 dark:text-slate-200 break-words">${item.q}</div>
+                        <div class="flex justify-between items-center mt-2 text-[11px] flex-wrap gap-1">
+                            <span class="uppercase font-bold text-slate-400">${item.type}</span>
+                            <div class="break-words">
+                                ${!item.correct ? `<span class="line-through text-red-500 mr-1.5">${item.userAns || 'No Answer'}</span>` : ''}
+                                <span class="font-bold ${item.correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}">${item.actualAns}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        document.getElementById('btn-reset-stats').onclick = async () => {
+            const confirmed = await showConfirmModal({
+                title: 'Reset Session Stats?',
+                message: 'Are you sure you want to reset your current score and review history?',
+                confirmText: 'Reset Stats',
+                cancelText: 'Cancel',
+                type: 'warning'
+            });
+
+            if (confirmed) {
+                appState.score = { correct: 0, incorrect: 0, count: 0 };
+                appState.history = [];
+                updateScoreDisplay();
+                renderStatsModal();
+                showToast({ type: 'info', title: 'Stats Reset', message: 'Your quiz session score has been reset.' });
+            }
+        };
+
+        // ================= EVENT HANDLERS & MODAL TRIGGERS =================
+        els.btnStartQuiz.onclick = startQuizSession;
+        els.btnQuickUpload.onclick = () => toggleModal(els.modalManager, els.modalManagerContent, true);
+        document.getElementById('btn-open-manager').onclick = () => {
+            renderManagerSetsList();
+            renderItemsEditor(appState.activeSetId);
+            toggleModal(els.modalManager, els.modalManagerContent, true);
+        };
+        document.getElementById('btn-close-manager').onclick = () => toggleModal(els.modalManager, els.modalManagerContent, false);
+        document.getElementById('btn-done-manager').onclick = () => toggleModal(els.modalManager, els.modalManagerContent, false);
+
+        els.modalManager.onclick = (e) => { if (e.target === els.modalManager) toggleModal(els.modalManager, els.modalManagerContent, false); };
+
+        els.modalStats.onclick = (e) => { if (e.target === els.modalStats) toggleModal(els.modalStats, els.modalStatsContent, false); };
+        
+        const openStatsHandler = () => {
+            renderStatsModal();
+            toggleModal(els.modalStats, els.modalStatsContent, true);
+        };
+
+        if (document.getElementById('btn-stats')) document.getElementById('btn-stats').onclick = openStatsHandler;
+        if (document.getElementById('btn-stats-mobile')) document.getElementById('btn-stats-mobile').onclick = openStatsHandler;
+
+        document.getElementById('btn-close-stats').onclick = () => toggleModal(els.modalStats, els.modalStatsContent, false);
+        document.getElementById('btn-resume-quiz').onclick = () => toggleModal(els.modalStats, els.modalStatsContent, false);
+
+        document.getElementById('brand-home').onclick = () => showScreen('screen-start');
+
+        // Theme Toggle (Dark Mode)
+        const toggleThemeHandler = () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('universal_reviewer_theme', isDark ? 'dark' : 'light');
+        };
+
+        if (els.btnThemeToggle) els.btnThemeToggle.onclick = toggleThemeHandler;
+        if (els.btnThemeToggleMobile) els.btnThemeToggleMobile.onclick = toggleThemeHandler;
+
+        // Initial setup
+        (() => {
+            const savedTheme = localStorage.getItem('universal_reviewer_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+            loadSetsFromStorage();
+            renderSetSelector();
+            updateScoreDisplay();
+        })();
+    </script>
+</body>
+</html>
