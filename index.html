@@ -107,63 +107,63 @@
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col min-h-screen selection:bg-blue-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
 
     <!-- Header & Navigation Bar (Fully Mobile Responsive) -->
-    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 md:px-6 py-2.5 sm:py-3 transition-colors">
-        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 md:px-6 py-3 sm:py-3.5 transition-colors">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
             
             <!-- Top Row on Mobile: Logo & Stats/Theme -->
             <div class="flex items-center justify-between w-full sm:w-auto">
-                <div class="flex items-center gap-2 cursor-pointer" id="brand-home">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 flex-shrink-0">
-                        <i class="fas fa-layer-group text-base sm:text-xl"></i>
+                <div class="flex items-center gap-2.5 cursor-pointer" id="brand-home">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 flex-shrink-0">
+                        <i class="fas fa-layer-group text-lg sm:text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="font-bold text-sm sm:text-lg leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                        <h1 class="font-extrabold text-base sm:text-xl leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                             Universal Reviewer
                         </h1>
-                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden md:block">Docs • Images • PPT • Excel • PDF</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium hidden md:block">Docs • Images • PPT • Excel • PDF</p>
                     </div>
                 </div>
 
                 <!-- Stats & Theme Toggle (Mobile Top Right) -->
-                <div class="flex items-center gap-1.5 sm:hidden">
-                    <button id="btn-stats-mobile" class="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1 touch-target">
-                        <div class="flex items-center gap-0.5 text-green-600 dark:text-green-400 font-bold">
-                            <i class="fas fa-check-circle"></i>
+                <div class="flex items-center gap-2 sm:hidden">
+                    <button id="btn-stats-mobile" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm touch-target">
+                        <div class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                            <i class="fas fa-check-circle text-xs sm:text-sm"></i>
                             <span id="header-correct-mobile">0</span>
                         </div>
                         <span class="text-slate-300 dark:text-slate-700">|</span>
-                        <div class="flex items-center gap-0.5 text-red-500 dark:text-red-400 font-bold">
-                            <i class="fas fa-times-circle"></i>
+                        <div class="flex items-center gap-1 text-red-500 dark:text-red-400 font-bold">
+                            <i class="fas fa-times-circle text-xs sm:text-sm"></i>
                             <span id="header-incorrect-mobile">0</span>
                         </div>
                     </button>
-                    <button id="btn-theme-toggle-mobile" class="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg touch-target">
-                        <i class="fas fa-moon text-base dark:hidden"></i>
-                        <i class="fas fa-sun text-base hidden dark:block"></i>
+                    <button id="btn-theme-toggle-mobile" class="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl touch-target">
+                        <i class="fas fa-moon text-lg dark:hidden"></i>
+                        <i class="fas fa-sun text-lg hidden dark:block"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Bottom Row on Mobile / Right Column on Desktop: Study Set Select & Documents -->
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
                 
                 <!-- Study Set Selector Dropdown -->
                 <div class="flex-1 sm:flex-initial relative min-w-0">
-                    <select id="select-study-set" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold rounded-lg px-2.5 py-1.5 sm:py-2 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer truncate">
+                    <select id="select-study-set" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer truncate shadow-sm">
                         <!-- Injected via JS -->
                     </select>
                 </div>
 
                 <!-- Documents Hub Button -->
-                <button id="btn-open-manager" class="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 touch-target flex-shrink-0" title="Manage Study Sets & Files">
+                <button id="btn-open-manager" class="px-3.5 py-2 bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 touch-target flex-shrink-0 shadow-sm" title="Manage Study Sets & Files">
                     <i class="fas fa-folder-open text-xs sm:text-sm"></i>
                     <span>Files</span>
                 </button>
 
                 <!-- Desktop Stats & Theme Buttons -->
                 <div class="hidden sm:flex items-center gap-2">
-                    <button id="btn-stats" class="p-2 sm:px-3 sm:py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 touch-target" title="View Statistics">
-                        <div class="flex items-center gap-1 text-green-600 dark:text-green-400 font-bold">
+                    <button id="btn-stats" class="p-2 sm:px-3.5 sm:py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 touch-target shadow-sm" title="View Statistics">
+                        <div class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
                             <i class="fas fa-check-circle"></i>
                             <span id="header-correct">0</span>
                         </div>
@@ -174,7 +174,7 @@
                         </div>
                     </button>
 
-                    <button id="btn-theme-toggle" class="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition touch-target" title="Toggle Light/Dark Theme">
+                    <button id="btn-theme-toggle" class="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition touch-target" title="Toggle Light/Dark Theme">
                         <i class="fas fa-moon text-lg dark:hidden"></i>
                         <i class="fas fa-sun text-lg hidden dark:block"></i>
                     </button>
@@ -196,10 +196,10 @@
             </div>
 
             <h2 id="display-set-name" class="text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 tracking-tight text-slate-900 dark:text-white break-words max-w-full">
-                Computer System Services
+                No Study Set Selected
             </h2>
             <p id="display-set-desc" class="text-xs sm:text-base text-slate-500 dark:text-slate-400 mb-5 max-w-xl mx-auto break-words">
-                Test your knowledge across terms, concepts, and definitions. Upload single or bulk Word documents, PowerPoint presentations, Excel spreadsheets, PDFs, or photos/images of notes to create personalized study sets!
+                Upload single or bulk Word documents, PowerPoint presentations, Excel spreadsheets, PDFs, or photos/images of notes to create personalized study sets!
             </p>
 
             <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 mb-6 border border-slate-200 dark:border-slate-700">
@@ -210,47 +210,46 @@
             <!-- Quiz Type Indicator Banner -->
             <div class="bg-blue-50/80 dark:bg-slate-800/80 border border-blue-200 dark:border-slate-700 rounded-xl p-3.5 sm:p-4 max-w-md mx-auto mb-6 sm:mb-8 text-left">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-1.5">
-                    <i class="fas fa-shuffle"></i> Randomized Question Formats
+                    <i class="fas fa-shuffle"></i> Definition-Based Question Formats
                 </h4>
                 <p class="text-xs text-slate-600 dark:text-slate-300">
-                    Questions will be generated randomly using 3 formats:
+                    Questions test definitions extracted directly from your uploaded notes:
                 </p>
                 <ul class="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-200 space-y-1.5">
-                    <li class="flex items-center gap-2"><i class="fas fa-pen text-purple-500 w-4"></i> 1. Identification</li>
-                    <li class="flex items-center gap-2"><i class="fas fa-list-ul text-indigo-500 w-4"></i> 2. Multiple Choice</li>
-                    <li class="flex items-center gap-2"><i class="fas fa-check-double text-emerald-500 w-4"></i> 3. True / False (with explanations)</li>
+                    <li class="flex items-center gap-2"><i class="fas fa-pen text-purple-500 w-4"></i> 1. Identification / Definition of Terms</li>
+                    <li class="flex items-center gap-2"><i class="fas fa-list-ul text-indigo-500 w-4"></i> 2. Multiple Choice (Definition Options)</li>
                 </ul>
             </div>
 
             <!-- Start Button Actions -->
             <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-3 max-w-md mx-auto">
-                <button id="btn-start-quiz" class="flex-1 py-3.5 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 active:scale-95 transition flex items-center justify-center gap-2 text-base touch-target">
+                <button id="btn-quick-upload" class="flex-1 py-3.5 px-5 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 active:scale-95 transition flex items-center justify-center gap-2 text-sm sm:text-base touch-target">
+                    <i class="fas fa-file-upload"></i>
+                    <span>Upload Documents / Images</span>
+                </button>
+
+                <button id="btn-start-quiz" disabled class="flex-1 py-3.5 px-6 rounded-xl font-bold text-slate-400 dark:text-slate-500 bg-slate-200/80 dark:bg-slate-800/80 opacity-60 cursor-not-allowed transition flex items-center justify-center gap-2 text-sm sm:text-base touch-target">
                     <span>Start Quiz</span>
                     <i class="fas fa-arrow-right"></i>
-                </button>
-                
-                <button id="btn-quick-upload" class="py-3.5 px-5 rounded-xl font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center gap-2 text-sm touch-target">
-                    <i class="fas fa-file-upload text-blue-500"></i>
-                    <span>Upload Documents / Images</span>
                 </button>
             </div>
         </section>
 
 
         <!-- ================= Screen 2: Active Quiz Screen ================= -->
-        <section id="screen-quiz" class="w-full glass-card rounded-2xl p-4 sm:p-8 shadow-xl hidden animate-pop max-w-full overflow-hidden">
+        <section id="screen-quiz" class="w-full glass-card rounded-3xl p-4 sm:p-8 shadow-xl hidden animate-pop max-w-full overflow-hidden">
             
             <!-- Progress Bar & Counter -->
-            <div class="flex justify-between items-center mb-4 sm:mb-6 text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <div class="flex justify-between items-center mb-4 sm:mb-6 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span id="question-counter">Question #1</span>
-                <span id="question-type-badge" class="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold">
+                <span id="question-type-badge" class="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-lg uppercase tracking-wider text-xs font-extrabold">
                     Multiple Choice
                 </span>
             </div>
 
             <!-- Question Prompt Area -->
-            <div class="mb-5 sm:mb-6 min-h-[80px] sm:min-h-[90px] flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-3.5 sm:p-6 rounded-xl border border-slate-200/80 dark:border-slate-700/60 max-w-full">
-                <h3 id="question-text" class="text-base sm:text-xl md:text-2xl font-bold leading-snug text-center text-slate-800 dark:text-slate-100 break-words w-full">
+            <div class="mb-5 sm:mb-6 min-h-[90px] flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 max-w-full">
+                <h3 id="question-text" class="text-lg sm:text-2xl md:text-3xl font-extrabold leading-snug text-center text-slate-800 dark:text-slate-100 break-words w-full">
                     Loading question...
                 </h3>
             </div>
@@ -478,64 +477,37 @@
         </div>
     </div>
 
+    <!-- Secret Message Modal (Triggers on 2 Consecutive Correct Answers) -->
+    <div id="modal-secret-dialog" class="fixed inset-0 z-[9995] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div id="modal-secret-content" class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl border border-pink-200 dark:border-pink-900/60 transform scale-95 transition-all duration-300 flex flex-col gap-4 text-center relative overflow-hidden">
+            <!-- Glowing Pink Aura & Icon -->
+            <div class="w-16 h-16 rounded-2xl bg-pink-500/10 text-pink-500 border border-pink-500/20 flex items-center justify-center mx-auto text-3xl shadow-lg shadow-pink-500/20">
+                <i class="fas fa-heart animate-bounce"></i>
+            </div>
+            <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-pink-500 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-3 py-1 rounded-full border border-pink-200 dark:border-pink-800/80 inline-block mb-2 shadow-sm">
+                    ✨ Secret Message ✨
+                </span>
+                <h3 id="secret-modal-message" class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                    <!-- Injected via JS -->
+                </h3>
+            </div>
+            <div class="mt-2">
+                <button id="secret-modal-btn-action" class="w-full py-3.5 px-6 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 active:scale-95 text-white font-extrabold rounded-2xl text-sm sm:text-base shadow-lg shadow-pink-500/30 transition touch-target">
+                    <!-- Injected via JS -->
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Application Core Script -->
     <script>
-        // ================= PRESET DATA: Computer System Services =================
-        const presetCSS = {
-            id: 'preset-css',
-            name: 'Computer System Services (CSS)',
-            description: 'Comprehensive hardware, networking, software, and cybersecurity reviewer.',
-            items: [
-                { term: "Input", def: "Data or instructions entered into a computer system." },
-                { term: "Process", def: "The manipulation or computation of data performed by the CPU." },
-                { term: "Output", def: "The processed data presented to the user (e.g., text on a screen, audio)." },
-                { term: "CPU", def: "The 'brain' of the computer that executes instructions.", alias: ["Central Processing Unit"] },
-                { term: "Motherboard", def: "The main printed circuit board connecting all components of a computer." },
-                { term: "System Unit", def: "The main chassis or case that houses the internal components of a computer." },
-                { term: "RAM", def: "Volatile, high-speed short-term memory used to store active data.", alias: ["Random Access Memory"] },
-                { term: "ROM", def: "Non-volatile memory containing permanent data like the system BIOS.", alias: ["Read-Only Memory"] },
-                { term: "PSU", def: "Converts electrical power from an outlet into usable power for the computer.", alias: ["Power Supply Unit"] },
-                { term: "GPU", def: "A specialized processor designed to accelerate graphics rendering.", alias: ["Graphics Processing Unit"] },
-                { term: "SSD", def: "Fast, non-volatile storage that uses flash memory.", alias: ["Solid State Drive"] },
-                { term: "HDD", def: "Traditional, slower storage that uses spinning magnetic platters.", alias: ["Hard Disk Drive"] },
-                { term: "3.5\"", def: "The standard physical drive size for desktop HDDs." },
-                { term: "2.5\"", def: "The standard physical drive size for laptop HDDs and SSDs." },
-                { term: "Hardware", def: "The physical, tangible components of a computer system." },
-                { term: "Cache", def: "High-speed, temporary CPU memory used to speed up data retrieval." },
-                { term: "Bus", def: "A communication system that transfers data between components inside a computer." },
-                { term: "BIOS", def: "Firmware used to perform hardware initialization during booting.", alias: ["Basic Input/Output System"] },
-                { term: "UEFI", def: "A modern replacement for BIOS with faster boot times and more features.", alias: ["Unified Extensible Firmware Interface"] },
-                { term: "Peripherals", def: "Auxiliary devices used to put information into and get information out of the computer (e.g., keyboard, mouse)." },
-                { term: "Overclocking", def: "Running a component (like a CPU or GPU) at a higher speed than its factory rating." },
-                { term: "Form Factor", def: "The physical size, shape, and layout specification of hardware like motherboards and cases." },
-                { term: "Heat Sink", def: "A passive heat exchanger that cools a component by dissipating heat into the air." },
-                { term: "NVMe", def: "A modern, ultra-fast protocol designed for reading and writing data on solid-state drives." },
-                { term: "CTRL + Z", def: "Keyboard shortcut for Undo." },
-                { term: "CTRL + X", def: "Keyboard shortcut for Cut." },
-                { term: "CTRL + C", def: "Keyboard shortcut for Copy." },
-                { term: "CTRL + V", def: "Keyboard shortcut for Paste." },
-                { term: "CTRL + A", def: "Keyboard shortcut for Select All." },
-                { term: "CTRL + S", def: "Keyboard shortcut for Save." },
-                { term: "CTRL + F", def: "Keyboard shortcut for Find." },
-                { term: "OS", def: "System software that manages computer hardware and software resources.", alias: ["Operating System"] },
-                { term: "Windows", def: "A widely used proprietary operating system developed by Microsoft." },
-                { term: "macOS", def: "The proprietary operating system developed by Apple for Mac computers." },
-                { term: "Linux", def: "An open-source, Unix-like operating system kernel used widely in servers." },
-                { term: "Open Source", def: "Software with source code that anyone can inspect, modify, and enhance." },
-                { term: "Compiler", def: "A program that translates human-readable source code into machine code." },
-                { term: "Algorithm", def: "A step-by-step set of operations or rules to be followed in calculations or problem-solving." },
-                { term: "LAN", def: "A network confined to a small geographic area, like a home or office.", alias: ["Local Area Network"] },
-                { term: "WLAN", def: "A local network that relies on wireless communication (Wi-Fi).", alias: ["Wireless Local Area Network"] },
-                { term: "Malware", def: "Malicious software designed to disrupt, damage, or gain unauthorized access to a computer." },
-                { term: "Ransomware", def: "Malware that encrypts a user's files and demands payment for the decryption key." }
-            ]
-        };
-
         // ================= STATE MANAGEMENT =================
         let appState = {
             studySets: [],
-            activeSetId: 'preset-css',
+            activeSetId: null,
             score: { correct: 0, incorrect: 0, count: 0 },
+            consecutiveCorrect: 0,
             history: [],
             currentQuestion: null,
             isAnswered: false
@@ -543,25 +515,25 @@
 
         // ================= LOCAL STORAGE HELPERS =================
         const saveSetsToStorage = () => {
-            const customSets = appState.studySets.filter(s => s.id !== 'preset-css');
-            localStorage.setItem('universal_reviewer_sets', JSON.stringify(customSets));
+            localStorage.setItem('universal_reviewer_sets', JSON.stringify(appState.studySets));
         };
 
         const loadSetsFromStorage = () => {
-            appState.studySets = [presetCSS];
+            // Purge all stored files and sets for a completely clean start
+            appState.studySets = [];
+            appState.activeSetId = null;
             try {
-                const stored = localStorage.getItem('universal_reviewer_sets');
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed)) appState.studySets.push(...parsed);
-                }
+                localStorage.removeItem('universal_reviewer_sets');
             } catch (e) {
-                console.error("Error loading local study sets", e);
+                console.error("Error clearing stored study sets", e);
             }
         };
 
         const getActiveSet = () => {
-            return appState.studySets.find(s => s.id === appState.activeSetId) || appState.studySets[0];
+            if (!appState.activeSetId && appState.studySets.length > 0) {
+                appState.activeSetId = appState.studySets[0].id;
+            }
+            return appState.studySets.find(s => s.id === appState.activeSetId) || appState.studySets[0] || null;
         };
 
         // ================= DOM ELEMENT REFERENCES =================
@@ -799,11 +771,36 @@
 
         // ================= STUDY SET SELECTOR UI =================
         const renderSetSelector = () => {
+            const active = getActiveSet();
+            const hasItems = active && active.items && active.items.length > 0;
+
+            if (els.btnStartQuiz) {
+                els.btnStartQuiz.disabled = !hasItems;
+                if (hasItems) {
+                    els.btnStartQuiz.className = 'flex-1 py-3.5 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 active:scale-95 transition flex items-center justify-center gap-2 text-sm sm:text-base touch-target';
+                    if (els.btnQuickUpload) {
+                        els.btnQuickUpload.className = 'flex-1 py-3.5 px-5 rounded-xl font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center gap-2 text-sm sm:text-base touch-target';
+                    }
+                } else {
+                    els.btnStartQuiz.className = 'flex-1 py-3.5 px-6 rounded-xl font-bold text-slate-400 dark:text-slate-500 bg-slate-200/80 dark:bg-slate-800/80 opacity-60 cursor-not-allowed transition flex items-center justify-center gap-2 text-sm sm:text-base touch-target';
+                    if (els.btnQuickUpload) {
+                        els.btnQuickUpload.className = 'flex-1 py-3.5 px-5 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 active:scale-95 transition flex items-center justify-center gap-2 text-sm sm:text-base touch-target';
+                    }
+                }
+            }
+
+            if (appState.studySets.length === 0 || !active) {
+                els.selectStudySet.innerHTML = '<option value="">No Study Sets Available</option>';
+                els.displaySetName.textContent = 'No Study Set Selected';
+                els.displaySetDesc.textContent = 'Upload a document or create a custom study set to start studying.';
+                els.displaySetCount.textContent = '0 Terms Available';
+                return;
+            }
+
             els.selectStudySet.innerHTML = appState.studySets.map(set => 
                 `<option value="${set.id}" ${set.id === appState.activeSetId ? 'selected' : ''}>${set.name} (${set.items.length})</option>`
             ).join('');
 
-            const active = getActiveSet();
             els.displaySetName.textContent = active.name;
             els.displaySetDesc.textContent = active.description || 'Custom document reviewer study set.';
             els.displaySetCount.textContent = `${active.items.length} Terms Available`;
@@ -817,8 +814,10 @@
         // ================= QUIZ ENGINE =================
         const startQuizSession = () => {
             const activeSet = getActiveSet();
-            if (!activeSet.items || activeSet.items.length === 0) {
-                showToast({ type: 'warning', title: 'Study Set Empty', message: 'This study set has no items! Please add items or upload a document first.' });
+            if (!activeSet || !activeSet.items || activeSet.items.length === 0) {
+                showToast({ type: 'warning', title: 'No Study Set Available', message: 'Please upload a document or create a study set first!' });
+                renderManagerSetsList();
+                if (appState.activeSetId) renderItemsEditor(appState.activeSetId);
                 toggleModal(els.modalManager, els.modalManagerContent, true);
                 return;
             }
@@ -838,8 +837,8 @@
             const activeSet = getActiveSet();
             const targetItem = activeSet.items[getRandomInt(activeSet.items.length)];
 
-            // Randomly select between the 3 question formats: MCQ, Identification, True/False
-            const allowedModes = ['mcq', 'ident', 'tf'];
+            // Randomly select between the 2 question formats: MCQ & Identification
+            const allowedModes = ['mcq', 'ident'];
             const qMode = allowedModes[getRandomInt(allowedModes.length)];
 
             appState.currentQuestion = { targetItem, mode: qMode };
@@ -847,48 +846,25 @@
             // Hide all quiz containers
             els.choicesContainer.classList.add('hidden');
             els.identificationContainer.classList.add('hidden');
-            els.tfContainer.classList.add('hidden');
-
-            const isPersonOrRole = /hero|president|leader|author|inventor|founder|scientist|person|king|queen|governor|minister/i.test(targetItem.term) || /hero|president|leader|author|inventor|founder|scientist|person/i.test(targetItem.def);
-            const questionPrefix = isPersonOrRole ? "Who" : "What";
+            if (els.tfContainer) els.tfContainer.classList.add('hidden');
 
             if (qMode === 'mcq') {
                 els.questionTypeBadge.textContent = 'Multiple Choice';
                 els.questionTypeBadge.className = 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
                 
-                els.questionText.innerHTML = `<span class="text-xs font-semibold text-blue-500 uppercase tracking-wider block mb-1">Question</span>${questionPrefix} is the <strong class="text-blue-600 dark:text-blue-400 font-bold">"${targetItem.term}"</strong>?`;
+                els.questionText.innerHTML = `<span class="text-xs font-semibold text-blue-500 uppercase tracking-wider block mb-1">Multiple Choice</span>Which of the following best defines <strong class="text-blue-600 dark:text-blue-400 font-bold">"${targetItem.term}"</strong>?`;
                 setupMCQDefinition(targetItem, activeSet.items);
 
             } else if (qMode === 'ident') {
-                els.questionTypeBadge.textContent = 'Identification';
+                els.questionTypeBadge.textContent = 'Identification / Definition';
                 els.questionTypeBadge.className = 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
                 
-                els.questionText.innerHTML = `<span class="text-xs font-semibold text-purple-500 uppercase tracking-wider block mb-1">Identification</span>${questionPrefix} is the <strong class="text-purple-600 dark:text-purple-400 font-bold">"${targetItem.term}"</strong>?`;
+                els.questionText.innerHTML = `<span class="text-xs font-semibold text-purple-500 uppercase tracking-wider block mb-1">Identification</span>What is the term for <strong class="text-purple-600 dark:text-purple-400 font-bold">"${targetItem.def}"</strong>?`;
                 setupIdentification(targetItem);
-
-            } else if (qMode === 'tf') {
-                els.questionTypeBadge.textContent = 'True or False';
-                els.questionTypeBadge.className = 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md uppercase tracking-wider text-[10px] sm:text-[11px] font-bold';
-                
-                const isTrue = Math.random() > 0.5;
-                let displayedAnswer = targetItem.def;
-                let swappedItem = null;
-
-                if (!isTrue && activeSet.items.length > 1) {
-                    let otherItems = activeSet.items.filter(i => i.term !== targetItem.term);
-                    swappedItem = otherItems[getRandomInt(otherItems.length)];
-                    displayedAnswer = swappedItem.def;
-                }
-                appState.currentQuestion.isTrueStatement = isTrue;
-                appState.currentQuestion.swappedItem = swappedItem;
-                appState.currentQuestion.displayedAnswer = displayedAnswer;
-
-                els.questionText.innerHTML = `<span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">True or False Statement</span><strong class="text-slate-900 dark:text-slate-100 font-bold">"${displayedAnswer}"</strong> is our <em class="text-slate-700 dark:text-slate-200">${targetItem.term}</em>.`;
-                setupTrueFalse();
             }
         };
 
-        // --- MCQ SETUP (OPTIONS = ANSWERS/DEFINITIONS) ---
+        // --- MCQ SETUP (OPTIONS = DEFINITIONS) ---
         const setupMCQDefinition = (targetItem, allItems) => {
             els.choicesContainer.classList.remove('hidden');
             els.choicesContainer.innerHTML = '';
@@ -901,16 +877,33 @@
                 choices.push(otherItems[randIdx]);
                 otherItems.splice(randIdx, 1);
             }
+
+            // Fallback plausible distractors if study set has fewer than 4 items
+            const defaultDistractors = [
+                "Any form of energy that moves through space without medium.",
+                "Only solid objects that can be touched and weighed.",
+                "A physical state with fixed shape and volume.",
+                "A process of energy conversion in closed systems."
+            ];
+            let dIndex = 0;
+            while (choices.length < 4) {
+                const fallbackDef = defaultDistractors[dIndex % defaultDistractors.length];
+                if (!choices.some(c => c.def === fallbackDef)) {
+                    choices.push({ term: 'Distractor', def: fallbackDef });
+                }
+                dIndex++;
+            }
+
             choices = shuffleArray(choices);
             const letters = ['A', 'B', 'C', 'D'];
 
             choices.forEach((choice, index) => {
                 const btn = document.createElement('button');
-                btn.className = 'mcq-choice-btn w-full p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium text-left transition flex items-center justify-between touch-target hover:border-blue-400 break-words';
+                btn.className = 'mcq-choice-btn w-full p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium text-left transition flex items-center justify-between touch-target hover:border-blue-400 break-words';
                 btn.innerHTML = `
-                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                        <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-extrabold flex items-center justify-center text-xs sm:text-sm flex-shrink-0">${letters[index]}</span>
-                        <span class="text-xs sm:text-base font-semibold choice-text break-words min-w-0">${choice.def}</span>
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-extrabold flex items-center justify-center text-xs sm:text-sm flex-shrink-0">${letters[index]}</span>
+                        <span class="text-sm sm:text-base font-semibold choice-text break-words min-w-0">${choice.def}</span>
                     </div>
                     <i class="status-icon fas hidden text-base sm:text-lg flex-shrink-0 ml-2"></i>
                 `;
@@ -950,8 +943,8 @@
 
             const target = appState.currentQuestion.targetItem;
             showQuizFeedback(isCorrect, isCorrect 
-                ? `🎉 <strong class="font-bold">Correct!</strong> <strong>"${target.def}"</strong> is indeed the <em>"${target.term}"</em>.` 
-                : `❌ <strong class="font-bold">Incorrect!</strong> The correct answer is <strong>"${target.def}"</strong>.`);
+                ? `🎉 <strong class="font-bold">Correct!</strong> <strong>"${target.def}"</strong> is indeed the definition of <em>"${target.term}"</em>.` 
+                : `❌ <strong class="font-bold">Incorrect!</strong> The correct definition of <strong>"${target.term}"</strong> is <strong>"${target.def}"</strong>.`);
             processResult(isCorrect, selectedDef, correctDef);
         };
 
@@ -969,10 +962,8 @@
             const normUser = normalizeAnswer(userAns);
             if (!normUser) return false;
 
-            const normDef = normalizeAnswer(targetItem.def);
             const normTerm = normalizeAnswer(targetItem.term);
-
-            if (normUser === normDef || normUser === normTerm) return true;
+            if (normUser === normTerm) return true;
 
             // Check aliases
             if (targetItem.alias && Array.isArray(targetItem.alias)) {
@@ -981,8 +972,8 @@
                 }
             }
 
-            // Substring match for names/terms if >= 3 characters (e.g. "Rizal" matching "Jose Rizal")
-            if (normUser.length >= 3 && (normDef.includes(normUser) || normTerm.includes(normUser))) {
+            // Substring match for terms if >= 3 characters (e.g. "Rizal" matching "Jose Rizal")
+            if (normUser.length >= 3 && normTerm.includes(normUser)) {
                 return true;
             }
 
@@ -996,7 +987,7 @@
             els.btnSubmitIdent.disabled = false;
 
             if (els.identHint) {
-                const answerStr = targetItem.def;
+                const answerStr = targetItem.term;
                 const firstChar = answerStr.charAt(0).toUpperCase();
                 els.identHint.textContent = `💡 Hint: Starts with "${firstChar}" (${answerStr.length} letters)`;
             }
@@ -1017,9 +1008,9 @@
             const isCorrect = checkIdentificationMatch(rawUserAns, targetItem);
 
             showQuizFeedback(isCorrect, isCorrect 
-                ? `🎉 <strong class="font-bold">Spot on!</strong> Correct identification: <strong>"${targetItem.def}"</strong>.` 
-                : `❌ <strong class="font-bold">Incorrect.</strong> Correct answer is <strong>"${targetItem.def}"</strong>.`);
-            processResult(isCorrect, rawUserAns, targetItem.def);
+                ? `🎉 <strong class="font-bold">Spot on!</strong> <strong>"${targetItem.term}"</strong> is the correct term.` 
+                : `❌ <strong class="font-bold">Incorrect.</strong> Correct term is <strong>"${targetItem.term}"</strong>.`);
+            processResult(isCorrect, rawUserAns, targetItem.term);
         };
 
         els.btnSubmitIdent.onclick = handleIdentAnswer;
@@ -1082,11 +1073,46 @@
             els.actionArea.classList.remove('hidden');
         };
 
+        // ================= SECRET MESSAGE SYSTEM =================
+        const secretMessages = [
+            { msg: "Miss na kita, galingan mo ah! 💖", btn: "Opo!" },
+            { msg: "Teka lang, pa-hug muna bago ka magpatuloy! 🫂", btn: "Hug back!" },
+            { msg: "Galingan mo ngayon! Proud na proud ako sa’yo. ✨", btn: "Salamat!" },
+            { msg: "Napadaan lang para sabihing miss kitang sobra. 🥺", btn: "Miss din kita!" },
+            { msg: "Inom ka muna water habang nagrereview, okay? 🧃", btn: "Done!" },
+            { msg: "Bawal sumuko ah? Kasama mo lang ako rito. 🤝", btn: "Laban lang!" },
+            { msg: "Uy! Paki-alaga naman sarili mo, mahal kita eh. 👉👈", btn: "Okey po!" },
+            { msg: "Pause muna... Pa-smile naman dyan kahit isa lang! 😊", btn: "Smiles" },
+            { msg: "Basta stay ka lang dyan ah? Wag ka aalis. 🥺", btn: "Promise!" },
+            { msg: "Galing-galing naman! Tuloy-tuloy mo lang yan ah! 🌟", btn: "Okey po!" }
+        ];
+
+        const showSecretMessageModal = () => {
+            const modal = document.getElementById('modal-secret-dialog');
+            const modalContent = document.getElementById('modal-secret-content');
+            const msgEl = document.getElementById('secret-modal-message');
+            const btnEl = document.getElementById('secret-modal-btn-action');
+
+            if (!modal || !modalContent || !msgEl || !btnEl) return;
+
+            const randomItem = secretMessages[getRandomInt(secretMessages.length)];
+            msgEl.textContent = randomItem.msg;
+            btnEl.textContent = randomItem.btn;
+
+            toggleModal(modal, modalContent, true);
+
+            btnEl.onclick = () => {
+                toggleModal(modal, modalContent, false);
+            };
+        };
+
         const processResult = (isCorrect, userAns, actualAns) => {
             if (isCorrect) {
                 appState.score.correct++;
+                appState.consecutiveCorrect++;
             } else {
                 appState.score.incorrect++;
+                appState.consecutiveCorrect = 0;
             }
             updateScoreDisplay();
 
@@ -1097,6 +1123,13 @@
                 userAns: userAns,
                 actualAns: actualAns
             });
+
+            // Trigger secret message modal when consecutive correct answers hit 2
+            if (isCorrect && appState.consecutiveCorrect % 2 === 0) {
+                setTimeout(() => {
+                    showSecretMessageModal();
+                }, 400);
+            }
         };
 
         els.btnNext.onclick = generateQuestion;
@@ -1339,6 +1372,14 @@
             return clean;
         };
 
+        const isNewItemStart = (line) => {
+            if (!line) return false;
+            const trimmed = line.trim();
+            if (/^(?:[•\*\-\#]+|\d+[\.\)]|[A-Za-z0-9\s\(\)]{2,60}[:–\-=])\s*/.test(trimmed)) return true;
+            if (/^(?:Q|Question|A|Answer)\s*[:\.\-]/i.test(trimmed)) return true;
+            return false;
+        };
+
         const extractItemsFromText = (text) => {
             const items = [];
             if (!text || typeof text !== 'string') return items;
@@ -1362,14 +1403,27 @@
                 if (qaMatch && qaMatch[1] && qaMatch[2]) {
                     const qText = qaMatch[1].replace(/^(what|who|which|how|why|is|are|define|explain)\s+(is|are|the|a|an)?\s*/i, '').replace(/\?$/, '').trim();
                     const termCandidate = cleanTerm(qText);
-                    const defCandidate = formatDefinition(qaMatch[2]);
+                    let rawDef = qaMatch[2].trim();
+
+                    while (i + 1 < rawLines.length && !isNewItemStart(rawLines[i + 1])) {
+                        i++;
+                        rawDef += ' ' + rawLines[i].trim();
+                    }
+
+                    const defCandidate = formatDefinition(rawDef);
                     if (!isJunkTerm(termCandidate) && defCandidate.length >= 5) {
                         const { primaryTerm, aliases } = parseTermAndAliases(termCandidate);
                         items.push({ term: primaryTerm, def: defCandidate, alias: aliases.length ? aliases : undefined });
                     }
                 } else if (inlineMatch && inlineMatch[1] && inlineMatch[2]) {
                     const rawTerm = inlineMatch[1].trim();
-                    const rawDef = inlineMatch[2].trim();
+                    let rawDef = inlineMatch[2].trim();
+
+                    while (i + 1 < rawLines.length && !isNewItemStart(rawLines[i + 1])) {
+                        i++;
+                        rawDef += ' ' + rawLines[i].trim();
+                    }
+
                     const cleanedTerm = cleanTerm(rawTerm);
 
                     if (!isJunkTerm(cleanedTerm) && rawDef.length >= 4) {
@@ -1389,21 +1443,26 @@
                 } else if (headingMatch && i + 1 < rawLines.length) {
                     const headingCandidate = cleanTerm(headingMatch[1]);
                     const nextLine = rawLines[i + 1];
-                    const isNextHeadingOrBullet = nextLine.match(/^(?:\d+[\.\)]|[•\*\-]|[^:–\-]{2,50}[:–\-])/);
 
-                    if (!isJunkTerm(headingCandidate)) {
+                    if (!isJunkTerm(headingCandidate) && !isNewItemStart(nextLine)) {
                         currentHeading = headingCandidate;
+                        let rawDef = nextLine.trim();
+                        i++;
 
-                        if (!isNextHeadingOrBullet && nextLine.length >= 10 && !isJunkTerm(nextLine)) {
+                        while (i + 1 < rawLines.length && !isNewItemStart(rawLines[i + 1])) {
+                            i++;
+                            rawDef += ' ' + rawLines[i].trim();
+                        }
+
+                        if (rawDef.length >= 10 && !isJunkTerm(rawDef)) {
                             const { primaryTerm, aliases } = parseTermAndAliases(headingCandidate);
-                            const formattedDef = formatDefinition(nextLine);
+                            const formattedDef = formatDefinition(rawDef);
 
                             items.push({
                                 term: primaryTerm,
                                 def: formattedDef,
                                 alias: aliases.length > 0 ? aliases : undefined
                             });
-                            i++;
                         }
                     }
                 }
@@ -1461,6 +1520,10 @@
 
         // ================= STUDY SET MANAGER UI =================
         const renderManagerSetsList = () => {
+            if (appState.studySets.length === 0) {
+                els.studySetsList.innerHTML = '<div class="text-xs text-slate-400 p-2 text-center">No study sets created yet.</div>';
+                return;
+            }
             els.studySetsList.innerHTML = appState.studySets.map(set => `
                 <div class="p-3 rounded-xl border ${set.id === appState.activeSetId ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-900/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'} flex items-center justify-between min-w-0">
                     <div class="min-w-0 flex-1 pr-2">
@@ -1471,7 +1534,7 @@
                         <button onclick="selectManagerSet('${set.id}')" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-semibold text-xs">
                             Select
                         </button>
-                        ${set.id !== 'preset-css' ? `<button onclick="deleteManagerSet('${set.id}')" class="p-1 text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>` : ''}
+                        <button onclick="deleteManagerSet('${set.id}')" class="p-1 text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -1495,18 +1558,27 @@
 
             if (confirmed) {
                 appState.studySets = appState.studySets.filter(s => s.id !== setId);
-                if (appState.activeSetId === setId) appState.activeSetId = 'preset-css';
+                if (appState.activeSetId === setId) {
+                    appState.activeSetId = appState.studySets.length > 0 ? appState.studySets[0].id : null;
+                }
                 saveSetsToStorage();
                 renderSetSelector();
                 renderManagerSetsList();
-                els.editTermsSection.classList.add('hidden');
+                if (appState.activeSetId) {
+                    renderItemsEditor(appState.activeSetId);
+                } else {
+                    els.editTermsSection.classList.add('hidden');
+                }
                 showToast({ type: 'info', title: 'Study Set Deleted', message: 'The study set has been removed.' });
             }
         };
 
         const renderItemsEditor = (setId) => {
             const set = appState.studySets.find(s => s.id === setId);
-            if (!set) return;
+            if (!set) {
+                els.editTermsSection.classList.add('hidden');
+                return;
+            }
 
             els.editTermsSection.classList.remove('hidden');
             els.editSetCount.textContent = set.items.length;
@@ -1537,6 +1609,10 @@
 
         document.getElementById('btn-add-item').onclick = () => {
             const set = getActiveSet();
+            if (!set) {
+                showToast({ type: 'warning', title: 'No Active Set', message: 'Please create or select a study set first.' });
+                return;
+            }
             set.items.push({ term: "New Term", def: "New Definition" });
             saveSetsToStorage();
             renderSetSelector();
@@ -1559,10 +1635,15 @@
         };
 
         document.getElementById('btn-export-json').onclick = () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getActiveSet(), null, 2));
+            const active = getActiveSet();
+            if (!active) {
+                showToast({ type: 'warning', title: 'No Active Set', message: 'No study set is currently selected to export.' });
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(active, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `${getActiveSet().name.toLowerCase().replace(/\s+/g, '_')}_reviewer.json`);
+            downloadAnchor.setAttribute("download", `${active.name.toLowerCase().replace(/\s+/g, '_')}_reviewer.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
